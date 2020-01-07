@@ -54,8 +54,11 @@ struct CouleurRVB{
 };
 
 Point P[NMAX];
-Point3D P3D[10000]; 
-CouleurRVB Couleur[9900];
+const int nbPoints=10000;
+const int col=sqrt(nbPoints);
+float maxy=1;
+Point3D P3D[nbPoints]; 
+CouleurRVB Couleur[nbPoints-col];
 
 static void menu (int item)
 {
@@ -65,21 +68,28 @@ static void menu (int item)
 
 void initializePoints(){
 	int cpt =0;
+	float mult=20;
 	for(int i=-50;i<50;i++){
 		for(int j=-50;j<50;j++){
 
+			int temp=mult*abs(sinf(2*i)*cosf(3*j));
+
 			P3D[cpt].x = i*10;
-			P3D[cpt].y = (10*sinf(2*i)*10*cosf(3*j));
+			P3D[cpt].y = temp;
 			P3D[cpt].z = j*10;
+			
+			if(maxy<temp)
+				maxy=temp;
 
 			cpt++;
 		}
 	}
 
-	for(int i=0;i<9900;i++){
-		Couleur[i].r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-		Couleur[i].v = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-		Couleur[i].b = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+	for(int i=0;i<nbPoints-col;i++){
+		Point3D p = P3D[i];
+		Couleur[i].r = static_cast <float> ((p.y/maxy)+0.1);
+		Couleur[i].v = static_cast <float> ((p.y/maxy)+0.1);
+		Couleur[i].b = static_cast <float> ((p.y/maxy)+0.1);
 	}
 }
 void TracePoints(){
@@ -88,18 +98,19 @@ void TracePoints(){
 	glColor3f(r,v,b);
 	glBegin(GL_TRIANGLE_STRIP);
 
-	for (int i=0;i<9900;i++){
-
-		glColor3f(r,v,b);
-
-		glVertex3f(P3D[i].x, P3D[i].y, P3D[i].z);
-		glVertex3f(P3D[i+1].x, P3D[i+1].y, P3D[i+1].z);
-		glVertex3f(P3D[i+100].x, P3D[i+100].y, P3D[i+100].z);
-		glVertex3f(P3D[i+101].x, P3D[i+101].y, P3D[i+101].z);
+	for (int i=0;i<nbPoints-col-1;i++){
 
 		r = Couleur[i].r;
 		v = Couleur[i].v;
 		b = Couleur[i].b;
+		glColor3f(r,v,b);
+
+		glVertex3f(P3D[i].x, P3D[i].y, P3D[i].z);
+		glVertex3f(P3D[i+col].x, P3D[i+col].y, P3D[i+col].z);
+		glVertex3f(P3D[i+1].x, P3D[i+1].y, P3D[i+1].z);
+		glVertex3f(P3D[i+col+1].x, P3D[i+col+1].y, P3D[i+col+1].z);
+
+		
 
 	}
 	glEnd();
