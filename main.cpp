@@ -39,7 +39,14 @@ struct Point {
 	void set(double a, double b) {x=a;y=b;}
 };
 
+struct Point3D{
+	double x, y, z;
+	Point3D(double a=0, double b=0, double c=0) {set(a,b,c);}
+	void set(double a, double b, double c) {x=a; y=b; z=c;}
+};
+
 Point P[NMAX];
+Point3D P3D[10000]; 
 
 static void menu (int item)
 {
@@ -47,6 +54,29 @@ static void menu (int item)
     glutPostRedisplay ();
 }
 
+void initializePoints(){
+	int cpt =0;
+	for(int i=0;i<100;i++){
+		for(int j=0;j<100;j++){
+
+			P3D[cpt].x = i*5;
+			P3D[cpt].y = (5*sinf(2*i)*5*cosf(3*j));
+			P3D[cpt].z = j*5;
+
+			cpt++;
+		}
+	}
+}
+void TracePoints(){
+	glColor3f(0.0,1.0,0.0);
+	glBegin(GL_POINTS);
+	for (int i=0;i<10000;i++){
+		glVertex3f(P3D[i].x, P3D[i].y, P3D[i].z);
+	}
+	glEnd();
+}
+
+/*
 void TracePoints()
 {
 	glColor3f(0.0,1.0,0.0);
@@ -64,9 +94,10 @@ void TracePoints()
 	}
 	glEnd();	
 	glDisable(GL_LINE_STIPPLE);
-
 }
+*/
 
+/*
 void bezier(){
 	mat matBezier = {{-1,3,-3,1}, {3, -6, 3, 0}, {-3, 3, 0, 0}, {1, 0, 0, 0}};
 	mat matParam(1,4);
@@ -100,6 +131,7 @@ void bezier(){
 		}
 	}
 }
+*/
 
 void catmullRom(){
 	mat matCatmullRom = { {-s, 2-s, s-2, s} , {2*s, s-3, 3-2*s, -s} , {-s, 0, s, 0} , {0, 1, 0, 0} };
@@ -134,6 +166,7 @@ void catmullRom(){
 	}
 }
 
+/*
 void catmullRom3D(){
 
     mat matCatmullRom = { {-s, 2-s, s-2, s} , {2*s, s-3, 3-2*s, -s} , {-s, 0, s, 0} , {0, 1, 0, 0} };
@@ -180,7 +213,9 @@ void catmullRom3D(){
         }
     }
 }
+*/
 
+/*
 void BSplines(){
 	mat matBSplines = { {-1, 3, -3, 1} , {3, -6, 3, 0} , {-3, 0, 3, 0} , {1, 4, 1, 0} };
 
@@ -213,7 +248,7 @@ void BSplines(){
 		}
 	}
 }
-
+*/
 
 void main_reshape(int width,  int height) 
 {
@@ -322,7 +357,7 @@ void Motion(int x, int y) {
 		int i= mp;
 		P[i].x = x;
 		P[i].y =  viewport[3]-y;
-		TracePoints();
+		//TracePoints();
 
 		glutPostRedisplay();
 	}
@@ -354,8 +389,9 @@ void F3D_affichage(){
 
     glutPostRedisplay();
 
-    catmullRom3D();
+    //catmullRom3D();
     //glutSolidCube(500);
+	TracePoints();
 
     glutSwapBuffers();
 }
@@ -363,6 +399,7 @@ void F3D_affichage(){
 void temoin_affichage(){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	/*
     switch (bouton_action) {
         case action1:
             bezier();
@@ -378,7 +415,8 @@ void temoin_affichage(){
             bezier();
             BSplines();
             break;
-    }
+    }	
+	*/
 
     glColor3f(0.0,1.0,0.0);
     glPointSize(3.0);
@@ -391,7 +429,7 @@ void temoin_affichage(){
         glEnd();
     }
 
-    TracePoints();
+    //TracePoints();
     glutPostRedisplay();
 
     glutSwapBuffers();
@@ -430,6 +468,7 @@ void F3D_mouse(int button, int state, int x,int y){
 
 int main (int argc, char** argv)
 {
+	initializePoints();
 
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
     glutInitWindowSize(WX, WY);
