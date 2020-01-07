@@ -13,7 +13,7 @@
 #define WX 1000
 #define WY 500
 #define GAP 10
-
+#define PI 3.14159
 using namespace arma;
 
 // variables globales pour OpenGL
@@ -68,15 +68,21 @@ static void menu (int item)
 
 void initializePoints(){
 	int cpt =0;
-	float mult=20;
+	float mult=40.0;
 	for(int i=-50;i<50;i++){
 		for(int j=-50;j<50;j++){
 
-			int temp=mult*abs(sinf(2*i)*cosf(3*j));
+			float ri=(i+50)/100.0;
+			ri*=PI;
+			float rj=(j+50)/100.0;
+			rj*=PI;
 
-			P3D[cpt].x = i*10;
+			int temp=mult*sinf(2*(ri))*cosf(3*(rj));
+			temp+=5;
+
+			P3D[cpt].x = i*20;
 			P3D[cpt].y = temp;
-			P3D[cpt].z = j*10;
+			P3D[cpt].z = j*20;
 			
 			if(maxy<temp)
 				maxy=temp;
