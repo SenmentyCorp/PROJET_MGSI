@@ -5,6 +5,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <armadillo>
+#include <ctime>
+#include <cstdlib>
 
 #include <GL/glut.h>
 
@@ -45,8 +47,15 @@ struct Point3D{
 	void set(double a, double b, double c) {x=a; y=b; z=c;}
 };
 
+struct CouleurRVB{
+	double r, v, b;
+	CouleurRVB(double a=0, double b=0, double c=0) {set(a,b,c);}
+	void set(double a, double b, double c) {r=a; v=b; b=c;}
+};
+
 Point P[NMAX];
 Point3D P3D[10000]; 
+CouleurRVB Couleur[9900];
 
 static void menu (int item)
 {
@@ -59,19 +68,39 @@ void initializePoints(){
 	for(int i=-50;i<50;i++){
 		for(int j=-50;j<50;j++){
 
-			P3D[cpt].x = i*5;
-			P3D[cpt].y = (5*sinf(2*i)*5*cosf(3*j));
-			P3D[cpt].z = j*5;
+			P3D[cpt].x = i*10;
+			P3D[cpt].y = (10*sinf(2*i)*10*cosf(3*j));
+			P3D[cpt].z = j*10;
 
 			cpt++;
 		}
 	}
+
+	for(int i=0;i<9900;i++){
+		Couleur[i].r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+		Couleur[i].v = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+		Couleur[i].b = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+	}
 }
 void TracePoints(){
-	glColor3f(0.0,1.0,0.0);
-	glBegin(GL_POINTS);
-	for (int i=0;i<10000;i++){
+
+	float r,v,b;
+	glColor3f(r,v,b);
+	glBegin(GL_TRIANGLE_STRIP);
+
+	for (int i=0;i<9900;i++){
+
+		glColor3f(r,v,b);
+
 		glVertex3f(P3D[i].x, P3D[i].y, P3D[i].z);
+		glVertex3f(P3D[i+1].x, P3D[i+1].y, P3D[i+1].z);
+		glVertex3f(P3D[i+100].x, P3D[i+100].y, P3D[i+100].z);
+		glVertex3f(P3D[i+101].x, P3D[i+101].y, P3D[i+101].z);
+
+		r = Couleur[i].r;
+		v = Couleur[i].v;
+		b = Couleur[i].b;
+
 	}
 	glEnd();
 }
@@ -468,6 +497,7 @@ void F3D_mouse(int button, int state, int x,int y){
 
 int main (int argc, char** argv)
 {
+	srand (static_cast <unsigned> (time(0)));
 	initializePoints();
 
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
