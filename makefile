@@ -2,7 +2,7 @@ CC=g++
 CFLAGS=-W -Wall -ansi -pedantic
 LDFLAGS=
 EXEC=PROJET
-SRC= $(wildcard *.cpp)
+SRC= $(wildcard ./Model/source/*.cpp *.cpp)
 OBJ= $(SRC:.cpp=.o)
 
 all: $(EXEC)
@@ -21,6 +21,7 @@ main.o: main.cpp
 
 clean:
 	@rm -rf *.o
+	@rm -rf ./Model/source/*.o
 
 mrproper: clean
 	@rm -rf $(EXEC)

@@ -5,6 +5,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <armadillo>
+#include "Model/header/WagonBac.h"
+#include "Model/header/WagonCorps.h"
+#include "Model/header/WagonRoues.h"
+#include "Model/header/Figure3D.h"
 
 #include <GL/glut.h>
 
@@ -214,6 +218,20 @@ void BSplines(){
 	}
 }
 
+static void appel3(){
+	glEnable(GL_DEPTH_TEST);
+    glLoadIdentity();
+    gluPerspective(60, 1, 0.01, 20);
+    gluLookAt(1.3, 0.2, 0.3, 0.2, 0.2, 0.2, 0, 1, 0);
+
+	WagonCorps* wc = new WagonCorps;
+	WagonBac* wb = new WagonBac;
+	WagonRoues* wr = new WagonRoues;
+
+	//wc->trace(0.26f, 0.29f, 0.47f);
+    //wb->trace(0.11f, 0.14f, 0.32f);
+	wr->trace(0.58f, 0.53f, 0.47f);
+}
 
 void main_reshape(int width,  int height) 
 {
@@ -354,8 +372,9 @@ void F3D_affichage(){
 
     glutPostRedisplay();
 
-    catmullRom3D();
+    //catmullRom3D();
     //glutSolidCube(500);
+	appel3();
 
     glutSwapBuffers();
 }
