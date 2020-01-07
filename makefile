@@ -1,13 +1,13 @@
 CC=g++
 CFLAGS=-W -Wall -ansi -pedantic
 LDFLAGS=
-EXEC=TP3
+EXEC=PROJET
 SRC= $(wildcard *.cpp)
 OBJ= $(SRC:.cpp=.o)
 
 all: $(EXEC)
 
-TP3: $(OBJ)
+$(EXEC): $(OBJ)
 	@$(CC) -o $@ $^ $(LDFLAGS) -lGL -lglut -lGLEW  -lm -lGLU -larmadillo -llapack -lblas
 	@make clean
 
