@@ -56,8 +56,8 @@ static void menu (int item)
 
 void initializePoints(){
 	int cpt =0;
-	for(int i=0;i<100;i++){
-		for(int j=0;j<100;j++){
+	for(int i=-50;i<50;i++){
+		for(int j=-50;j<50;j++){
 
 			P3D[cpt].x = i*5;
 			P3D[cpt].y = (5*sinf(2*i)*5*cosf(3*j));
