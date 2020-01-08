@@ -135,15 +135,15 @@ void initializePoints()
 		{
 
 			float ri = (i + range) / col;
-			ri *= PI;
+			ri *= PI*1.4;
 			float rj = (j + range) / col;
-			rj *= PI;
+			rj *= PI*1.4;
 
 			int temp = mult * (sinf(2.0 * (ri - rj)) * cosf(ri - rj * ri) * cosf(3.0 * (rj - ri)) * PI * ri - rj + sqrt(2 * ri) * abs(sinf(ri * ri))) + 10;
 
-			P3D[cpt].x = i * 10;
+			P3D[cpt].x = i * (10/(col/100));
 			P3D[cpt].y = temp;
-			P3D[cpt].z = j * 10;
+			P3D[cpt].z = j * (10/(col/100));
 			cpt++;
 			if (max < temp)
 				max = temp;
@@ -156,12 +156,12 @@ void initializePoints()
 	//cout << max << " " << min << "=" << yrange << endl;
 	for (int i = 0; i < nbPoints; i++)
 	{
-		float c1[3]={79,66,37};
-		float c2[3]={70,108,29};
-		float c3[3]={132,165,119};
-		float c4[4]={255,255,255};
-		int palier1=-3;
-		int palier2=30;
+		float c1[3] = {79, 66, 37};
+		float c2[3] = {70, 108, 29};
+		float c3[3] = {132, 165, 119};
+		float c4[4] = {255, 255, 255};
+		int palier1 = -1;
+		int palier2 = 20;
 
 		Point3D p = P3D[i];
 		if (p.y <= palier1)
@@ -420,7 +420,7 @@ void F3D_affichage()
 	glOrtho(-500, 500, -500, 500, -10000, 10000);
 	glRotatef(-(float)0.0, 1.0, 0.0, 0.0);
 	glRotatef(-(float)0.0, 0.0, 1.0, 0.0);
-
+	glEnable(GL_DEPTH_TEST);
 	if (isCamPanoramique)
 	{
 		gluLookAt(sinf(theta) * 600, 230, cosf(theta) * 600, 0, 0, 0, 0, 1, 0);
