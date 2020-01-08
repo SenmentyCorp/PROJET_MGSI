@@ -56,7 +56,6 @@ struct CouleurRVB{
 Point P[NMAX];
 const int nbPoints=10000;
 const int col=sqrt(nbPoints);
-float maxy=1;
 Point3D P3D[nbPoints]; 
 CouleurRVB Couleur[nbPoints-col];
 
@@ -66,9 +65,14 @@ static void menu (int item)
     glutPostRedisplay ();
 }
 
+float map(float value, float istart, float istop, float ostart, float ostop) {
+    return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
+}
+
 void initializePoints(){
 	int cpt =0;
-	float mult=40.0;
+	float mult=30.0;
+	float mult2=0.05;
 	for(int i=-50;i<50;i++){
 		for(int j=-50;j<50;j++){
 
@@ -77,33 +81,36 @@ void initializePoints(){
 			float rj=(j+50)/100.0;
 			rj*=PI;
 
-			int temp=mult*sinf(2*(ri))*cosf(3*(rj));
-			temp+=5;
+			int temp=mult*(sinf(2*(ri))*cosf(3*(rj)));
 
-			P3D[cpt].x = i*20;
+			P3D[cpt].x = i*10;
 			P3D[cpt].y = temp;
-			P3D[cpt].z = j*20;
-			
-			if(maxy<temp)
-				maxy=temp;
-
+			P3D[cpt].z = j*10;
+		cout<<temp<<" ";
 			cpt++;
 		}
+		cout<<endl;
 	}
 
+	
+	//miny=abs(miny);
 	for(int i=0;i<nbPoints-col;i++){
 		Point3D p = P3D[i];
-		Couleur[i].r = static_cast <float> ((p.y/maxy)+0.1);
-		Couleur[i].v = static_cast <float> ((p.y/maxy)+0.1);
-		Couleur[i].b = static_cast <float> ((p.y/maxy)+0.1);
+		Couleur[i].r = map(p.y,-mult/2,mult/2,60/255.0,130/255.0);
+		Couleur[i].v = 0.4+map(p.x,-500,500,0,0.3);;//static_cast <float> ((p.y/maxy)+0.1);
+		Couleur[i].b = 0.31+map(p.z,-500,500,0,0.2);//static_cast <float> ((p.y/maxy)+0.1);
+		//cout<<Couleur[i].r *255<<" "<<Couleur[i].r<<p.y<<endl;
 	}
+	//cout<<P3D[4700].y<<endl;
 }
+
+
+
 void TracePoints(){
 
 	float r,v,b;
 	glColor3f(r,v,b);
 	glBegin(GL_TRIANGLE_STRIP);
-
 	for (int i=0;i<nbPoints-col-1;i++){
 
 		r = Couleur[i].r;
@@ -111,14 +118,18 @@ void TracePoints(){
 		b = Couleur[i].b;
 		glColor3f(r,v,b);
 
-		glVertex3f(P3D[i].x, P3D[i].y, P3D[i].z);
-		glVertex3f(P3D[i+col].x, P3D[i+col].y, P3D[i+col].z);
-		glVertex3f(P3D[i+1].x, P3D[i+1].y, P3D[i+1].z);
-		glVertex3f(P3D[i+col+1].x, P3D[i+col+1].y, P3D[i+col+1].z);
-
+		if((i+1)%col==0){
+			glEnd();
+			glBegin(GL_TRIANGLE_STRIP);
+		}else{
+			glVertex3f(P3D[i].x, P3D[i].y, P3D[i].z);
+			glVertex3f(P3D[i+col].x, P3D[i+col].y, P3D[i+col].z);
+			glVertex3f(P3D[i+1].x, P3D[i+1].y, P3D[i+1].z);
+			glVertex3f(P3D[i+col+1].x, P3D[i+col+1].y, P3D[i+col+1].z);
+		}
+	}
 		
 
-	}
 	glEnd();
 }
 
@@ -410,7 +421,17 @@ void Motion(int x, int y) {
 }
 
 void keyboard(unsigned char key, int x, int y){
-
+	switch (key)
+    {
+	case 'f': /* affichage du carre plein */
+      glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+      glutPostRedisplay();
+      break;
+    case 'e': /* affichage en mode fil de fer */
+      glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+      glutPostRedisplay();
+      break;
+	}
 }
 
 void F3D_reshape(int x, int y){
@@ -429,7 +450,7 @@ void F3D_affichage(){
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    glOrtho(-500,500,-500,500,-500,500);
+    glOrtho(-500,500,-500,500,-1000,1000);
     glRotatef(-(float)angley,1.0,0.0,0.0);
     glRotatef(-(float)anglex,0.0,1.0,0.0);
 
@@ -522,7 +543,7 @@ int main (int argc, char** argv)
     glutInitWindowPosition(0, 0);
     glutInit(&argc, argv);
 	glEnable(GL_DEPTH_TEST);
-    
+    glEnable(GL_MULTISAMPLE);
     window = glutCreateWindow("Courbes Cubiques");
 
     glutReshapeFunc(main_reshape);
@@ -534,7 +555,7 @@ int main (int argc, char** argv)
     glutDisplayFunc(F3D_affichage);
     glutMotionFunc(F3D_motion);
     glutMouseFunc(F3D_mouse);
-
+glutKeyboardFunc(keyboard);
 
     //Fenetre 2D
     temoin = glutCreateSubWindow(window, GAP+WX/2+GAP, GAP, WX/2, WY);
@@ -542,7 +563,7 @@ int main (int argc, char** argv)
     glutDisplayFunc(temoin_affichage);
     glutMouseFunc(Mouse);
 	glutMotionFunc(Motion);
-	glutKeyboardFunc(keyboard);
+	
 
     glutCreateMenu(menu);
     glutAddMenuEntry ("Bezier", action1);
