@@ -5,10 +5,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <armadillo>
-#include "Model/header/WagonBac.h"
-#include "Model/header/WagonCorps.h"
-#include "Model/header/WagonRoues.h"
-#include "Model/header/Figure3D.h"
+#include "Model/header/WagonBetail.h"
+#include "Model/header/Vecteur.h"
 
 #include <GL/glut.h>
 
@@ -27,6 +25,7 @@ float s=0.5f;
 int presse=0;
 int anglex=0,angley=0,xold,yold;
 int NP=50;
+int trX=0;
 
 enum TypeBouton
 {
@@ -221,16 +220,12 @@ void BSplines(){
 static void appel3(){
 	glEnable(GL_DEPTH_TEST);
     glLoadIdentity();
-    gluPerspective(60, 1, 0.01, 20);
-    gluLookAt(1.3, 0.2, 0.3, 0.2, 0.2, 0.2, 0, 1, 0);
+    gluPerspective(60, 1, 0.01, 150);
+    gluLookAt(0, 0, 35, 0, 0, 0, 0, 1, 0);
 
-	WagonCorps* wc = new WagonCorps;
-	WagonBac* wb = new WagonBac;
-	WagonRoues* wr = new WagonRoues;
-
-	//wc->trace(0.26f, 0.29f, 0.47f);
-    //wb->trace(0.11f, 0.14f, 0.32f);
-	wr->trace(0.58f, 0.53f, 0.47f);
+	WagonBetail* wb = new WagonBetail;
+	wb->assembler();
+	
 }
 
 void main_reshape(int width,  int height) 
