@@ -14,8 +14,15 @@ void WagonBetail::assembler(){
     
     glPushMatrix();
 
+
         glTranslatef(this->position.x, this->position.y, this->position.z);
         glTranslatef(this->longueurTrain*(0.7f/2.0f), this->hauteurTrain*(1.5f/10.0f), 0);
+
+        //glPushMatrix();
+        glRotatef(this->direction.z, 0, 0, 1);
+        glRotatef(this->direction.y, 0, 1, 0);
+        glRotatef(this->direction.x, 1, 0, 0);
+
         //ROUE 1
         glPushMatrix();
             glColor3f(0.33f, 0.24f, 0.25f);
@@ -118,7 +125,8 @@ void WagonBetail::assembler(){
             glTranslatef(0, this->hauteurTrain*(5.0f/10.0f), 0);
             glScalef(this->longueurTrain, this->hauteurTrain*(9.0f/10.0f), this->largeurTrain);
             glutSolidCube(1);
-        glPopMatrix();   
+        glPopMatrix(); 
+        //glPopMatrix();  
 
     glPopMatrix();
     
@@ -131,7 +139,9 @@ void WagonBetail::deplacer(float x, float y, float z){
 }
 
 void WagonBetail::orienter(float x, float y, float z){
-
+    this->direction.x=x;
+    this->direction.y=y;
+    this->direction.z=z;
 }
 
         

@@ -505,11 +505,8 @@ void F3D_affichage()
 
 	WagonBetail* wb3 = new WagonBetail;
 	wb3->deplacer(-wb3->getLongueurRouePrevRoueSuiv(), 0, 0);
+	wb3->orienter(0, 30, 0);
 	wb3->assembler();
-
-	WagonBetail* wb4 = new WagonBetail;
-	wb4->deplacer(-2*wb4->getLongueurRouePrevRoueSuiv(), 0, 0);
-	wb4->assembler();
 
 	glutSwapBuffers();
 }
