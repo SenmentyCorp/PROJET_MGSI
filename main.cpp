@@ -492,7 +492,11 @@ void F3D_affichage()
 
 	//catmullRom3D();
 	//glutSolidCube(500);
-	TracePoints();
+	//TracePoints();
+
+	WagonBetail* wb = new WagonBetail;
+	wb->assembler();
+	
 	glutSwapBuffers();
 }
 

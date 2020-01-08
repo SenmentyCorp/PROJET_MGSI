@@ -27,9 +27,9 @@ class WagonBetail{
         Vecteur position;
 
     private:
-        const float largeurTrain=8;
-        const float longueurTrain=25;
-        const float hauteurTrain=10;
+        const float largeurTrain=80;
+        const float longueurTrain=250;
+        const float hauteurTrain=100;
         Vecteur positionRoueAvant;
         Vecteur positionRoueArriere;
 };

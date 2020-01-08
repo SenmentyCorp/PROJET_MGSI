@@ -11,19 +11,67 @@ WagonBetail::WagonBetail(){
 }
 
 void WagonBetail::assembler(){
+
+    glEnable(GL_DEPTH_TEST);
     
     glPushMatrix();
-        glColor3f(0.5f, 0.17f, 0.05f);
-        glScalef(this->longueurTrain, this->hauteurTrain*(9.0f/10.0f), this->largeurTrain);
-        glTranslatef(0, this->hauteurTrain*(0.5f/10.0f), 0);
-        glutSolidCube(1);
-    glPopMatrix();
+        glRotatef(M_PI, 0, 1, 0); 
 
-    glPushMatrix();
-        glColor3f(0.43f, 0.34f, 0.35f);
-        glScalef(this->hauteurTrain*(1.0f/10.0f), this->hauteurTrain*(1.0f/10.0f), 0.4);
-        glTranslatef(this->largeurTrain, 0, this->longueurTrain*(0.5f/10.0f));
-        glutSolidSphere(1, 24, 24);
+        //ROUE 1
+        glPushMatrix();
+            glColor3f(0.43f, 0.34f, 0.35f);
+            glTranslatef(this->longueurTrain*(-0.7f/2.0f), 0, this->largeurTrain*(-0.7f/2.0f));
+            glScalef(this->hauteurTrain*(1.5f/10.0f), this->hauteurTrain*(1.5f/10.0f), this->largeurTrain*(1.5f/10.0f));
+            glutSolidSphere(1, 24, 24);
+        glPopMatrix();
+
+        //ROUE 2
+        glPushMatrix();
+            glColor3f(0.43f, 0.34f, 0.35f);
+            glTranslatef(this->longueurTrain*(-0.7f/2.0f), 0, this->largeurTrain*(0.7f/2.0f));
+            glScalef(this->hauteurTrain*(1.5f/10.0f), this->hauteurTrain*(1.5f/10.0f), this->largeurTrain*(1.5f/10.0f));
+            glutSolidSphere(1, 24, 24);
+        glPopMatrix();
+
+        //ROUE 3
+        glPushMatrix();
+            glColor3f(0.43f, 0.34f, 0.35f);
+            glTranslatef(this->longueurTrain*(0.7f/2.0f), 0, this->largeurTrain*(-0.7f/2.0f));
+            glScalef(this->hauteurTrain*(1.5f/10.0f), this->hauteurTrain*(1.5f/10.0f), this->largeurTrain*(1.5f/10.0f));
+            glutSolidSphere(1, 24, 24);
+        glPopMatrix();
+
+        //ROUE 4
+        glPushMatrix();
+            glColor3f(0.43f, 0.34f, 0.35f);
+            glTranslatef(this->longueurTrain*(0.7f/2.0f), 0, this->largeurTrain*(0.7f/2.0f));
+            glScalef(this->hauteurTrain*(1.5f/10.0f), this->hauteurTrain*(1.5f/10.0f), this->largeurTrain*(1.5f/10.0f));
+            glutSolidSphere(1, 24, 24);
+        glPopMatrix();
+
+        //PORTE 1
+        glPushMatrix();
+            glColor3f(0.46f, 0.27f, 0.21f);
+            glTranslatef(this->longueurTrain*(1.5f/10.0f), this->hauteurTrain*(5.2f/10.0f), this->largeurTrain*(5.2f/10.0f));
+            glScalef(this->longueurTrain*(2.0f/10.0f), this->hauteurTrain*(7.0f/10.0f), this->largeurTrain*(2.0f/10.0f));
+            glutSolidCube(1);
+        glPopMatrix();
+
+        //PORTE 2
+        glPushMatrix();
+            glColor3f(0.46f, 0.27f, 0.21f);
+            glTranslatef(this->longueurTrain*(-1.5f/10.0f), this->hauteurTrain*(5.2f/10.0f), this->largeurTrain*(5.2f/10.0f));
+            glScalef(this->longueurTrain*(2.0f/10.0f), this->hauteurTrain*(7.0f/10.0f), this->largeurTrain*(2.0f/10.0f));
+            glutSolidCube(1);
+        glPopMatrix();
+
+        //CORPS
+        glPushMatrix();
+            glColor3f(0.45f, 0.17f, 0.05f);
+            glTranslatef(0, this->hauteurTrain*(5.0f/10.0f), 0);
+            glScalef(this->longueurTrain, this->hauteurTrain*(9.0f/10.0f), this->largeurTrain);
+            glutSolidCube(1);
+        glPopMatrix();   
     glPopMatrix();
     
 }
