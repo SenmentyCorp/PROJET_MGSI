@@ -11,7 +11,7 @@
 #include <GL/glut.h>
 
 #define WX 1000
-#define WY 500
+#define WY 790
 #define GAP 10
 #define PI 3.14159
 using namespace arma;
@@ -70,10 +70,11 @@ struct CouleurRVB
 };
 
 Point P[NMAX];
-const int nbPoints = 10000;
-const int col = sqrt(nbPoints);
+
+const int col = 500;
+const int nbPoints = col*col;
 Point3D P3D[nbPoints];
-CouleurRVB Couleur[nbPoints - col];
+CouleurRVB Couleur[nbPoints];
 
 static void menu(int item)
 {
@@ -89,35 +90,33 @@ float map(float value, float istart, float istop, float ostart, float ostop)
 void initializePoints()
 {
 	int cpt = 0;
-	float mult = 30.0;
-	float mult2 = 0.05;
-	for (int i = -50; i < 50; i++)
+	float mult = 150.0;
+	float range = col /2;
+	for (int i = -range; i < range; i++)
 	{
-		for (int j = -50; j < 50; j++)
+		for (int j = -range; j < range; j++)
 		{
 
-			float ri = (i + 50) / 100.0;
-			ri *= PI;
-			float rj = (j + 50) / 100.0;
-			rj *= PI;
+			float ri = (i + range) / col;
+			ri *= PI*1.4;
+			float rj = (j + range) / col;
+			rj *= PI*1.3;
 
-			int temp = mult * (sinf(2 * (ri)) * cosf(3 * (rj)));
+			int temp = mult * (sinf(2.0 * (ri)) * cosf(3.0 * (rj)) * PI); //(map(i * j, -nbPoints/2, nbPoints/2, 0, nbPoints) / nbPoints)
 
 			P3D[cpt].x = i * 10;
 			P3D[cpt].y = temp;
 			P3D[cpt].z = j * 10;
-			cout << temp << " ";
 			cpt++;
 		}
-		cout << endl;
 	}
 
-	for (int i = 0; i < nbPoints - col; i++)
+	for (int i = 0; i < nbPoints ; i++)
 	{
 		Point3D p = P3D[i];
-		Couleur[i].r = map(p.y, -mult / 2, mult / 2, 60 / 255.0, 130 / 255.0);
-		Couleur[i].v = 0.4 + map(p.x, -500, 500, 0, 0.3);
-		Couleur[i].b = 0.31 + map(p.z, -500, 500, 0, 0.2);
+		Couleur[i].r = map(p.y, -mult, mult, 100 / 255.0, 150 / 255.0);
+		Couleur[i].v = map(p.y, -mult, mult, 25 / 255.0, 70 / 255.0);//0.4 ;//+ map(p.x, -nbPoints/2,nbPoints/2, 0, 0.3);
+		Couleur[i].b = map(p.y, -mult, mult, 130 / 255.0, 220 / 255.0);//0.31 ;//+ map(p.z, -nbPoints/2,nbPoints/2, 0, 0.2);
 	}
 }
 
@@ -125,15 +124,14 @@ void TracePoints()
 {
 
 	float r, v, b;
-	glColor3f(r, v, b);
 	glBegin(GL_TRIANGLE_STRIP);
-	for (int i = 0; i < nbPoints - col - 1; i++)
+	for (int i = 0; i < nbPoints - col; i++)
 	{
 
 		r = Couleur[i].r;
 		v = Couleur[i].v;
 		b = Couleur[i].b;
-		glColor3f(r, v, b);
+		glColor4f(r, v, b, 1);
 
 		if ((i + 1) % col == 0)
 		{
@@ -148,66 +146,8 @@ void TracePoints()
 			glVertex3f(P3D[i + col + 1].x, P3D[i + col + 1].y, P3D[i + col + 1].z);
 		}
 	}
-
 	glEnd();
 }
-
-/*
-void TracePoints()
-{
-	glColor3f(0.0,1.0,0.0);
-	glBegin(GL_POINTS);
-	for (int i=0;i<N;i++){
-		glVertex2f(P[i].x,P[i].y);
-	}
-	glEnd();
-	glColor3f(1.0,1.0,1.0);
-	glLineStipple(1, 0x3F07);
-	glEnable(GL_LINE_STIPPLE);
-	glBegin(GL_LINE_STRIP);
-	for (int i=0;i<N;i++){
-		glVertex2f(P[i].x,P[i].y);
-	}
-	glEnd();	
-	glDisable(GL_LINE_STIPPLE);
-}
-*/
-
-/*
-void bezier(){
-	mat matBezier = {{-1,3,-3,1}, {3, -6, 3, 0}, {-3, 3, 0, 0}, {1, 0, 0, 0}};
-	mat matParam(1,4);
-
-	mat matPointX(4, 1);
-	mat matPointY(4, 1);
-	
-	for(int i=0;i<N;i++){
-		if(i!=0 && i%3 == 0){
-			for(int k=0;k<4;k++){
-				double coordX = P[i-k].x;
-				double coordY = P[i-k].y;
-
-				matPointX.at(k,0) = coordX;
-				matPointY.at(k,0) = coordY;
-			}
-
-			glBegin(GL_LINE_STRIP);
-			glColor3f(1.0f, 0.0f, 0.0f);
-			for(double j=0;j<1;j+=0.01){
-
-				//double scJ=
-				mat matParam = {{pow(j,3), pow(j,2), j, 1}};
-
-				mat resultMultX = matParam*matBezier*matPointX;
-				mat resultMultY = matParam*matBezier*matPointY;
-
-				glVertex2f(resultMultX(0,0), resultMultY(0,0));
-			}
-			glEnd();
-		}
-	}
-}
-*/
 
 void catmullRom()
 {
@@ -245,90 +185,6 @@ void catmullRom()
 		}
 	}
 }
-
-/*
-void catmullRom3D(){
-
-    mat matCatmullRom = { {-s, 2-s, s-2, s} , {2*s, s-3, 3-2*s, -s} , {-s, 0, s, 0} , {0, 1, 0, 0} };
-
-
-    mat matPointX(4, 1);
-    mat matPointY(4, 1);
-
-    for(int i=3;i<N;i++){
-        if(N>3 && i%1 == 0){
-            for(int k=0;k<4;k++){
-                double coordX = P[i-k].x;
-                double coordY = P[i-k].y;
-
-                matPointX.at(k,0) = coordX;
-                matPointY.at(k,0) = coordY;
-            }
-
-            glBegin(GL_LINE_STRIP);
-            glColor3f(1.0f, 1.0f, 0.0f);
-            for(double j=0;j<1;j+=0.01){
-
-                mat matParam = {{pow(j,3), pow(j,2), j, 1}};
-
-                mat resultMultX = matParam*matCatmullRom*matPointX;
-                mat resultMultY = matParam*matCatmullRom*matPointY;
-
-                float teta = 0;
-                float decalage = 2*M_PI/NP;
-
-                for(int k=0;k<NP;k++){
-                    float coordX, coordY, coordZ;
-                    coordX = resultMultX(0,0) * cosf(teta);
-                    coordY = resultMultY(0,0);
-                    coordZ = resultMultX(0,0) * sinf(teta);
-
-                    glVertex3f(coordX, coordY, coordZ);
-
-                    teta+=decalage;
-                }
-
-            }
-            glEnd();
-        }
-    }
-}
-*/
-
-/*
-void BSplines(){
-	mat matBSplines = { {-1, 3, -3, 1} , {3, -6, 3, 0} , {-3, 0, 3, 0} , {1, 4, 1, 0} };
-
-	mat matPointX(4, 1);
-	mat matPointY(4, 1);
-
-	for(int i=3;i<N;i++){
-		if(N>3 && i%1 == 0){
-			for(int k=0;k<4;k++){
-				double coordX = P[i-k].x;
-				double coordY = P[i-k].y;
-
-				matPointX.at(k,0) = coordX;
-				matPointY.at(k,0) = coordY;
-			}
-
-			glBegin(GL_LINE_STRIP);
-			glColor3f(1.0f, 0.0f, 1.0f);
-			for(double j=0;j<1;j+=0.01){
-
-				mat matParam = {{pow(j,3), pow(j,2), j, 1}};
-				matParam = matParam * 1.0f/6.0f;
-
-				mat resultMultX = matParam*matBSplines*matPointX;
-				mat resultMultY = matParam*matBSplines*matPointY;
-
-				glVertex2f(resultMultX(0,0), resultMultY(0,0));
-			}
-			glEnd();
-		}
-	}
-}
-*/
 
 void main_reshape(int width, int height)
 {
@@ -482,7 +338,7 @@ void F3D_affichage()
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glOrtho(-500, 500, -500, 500, -1000, 1000);
+	glOrtho(-1000, 1000, -1000, 1000, -10000, 10000);
 	glRotatef(-(float)angley, 1.0, 0.0, 0.0);
 	glRotatef(-(float)anglex, 0.0, 1.0, 0.0);
 
@@ -579,13 +435,14 @@ int main(int argc, char **argv)
 	glutInit(&argc, argv);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_MULTISAMPLE);
-	window = glutCreateWindow("Courbes Cubiques");
-
+	window = glutCreateWindow("Tchouk Tchouk");
 	glutReshapeFunc(main_reshape);
 	glutDisplayFunc(main_display);
 
 	//Fenetre 3D
-	F3D = glutCreateSubWindow(window, GAP, GAP, WX / 2, WY);
+	F3D = glutCreateSubWindow(window, GAP, GAP, 780,780);
+
+	glClearColor(0.3, 0.7, 0.7, 1);
 	glutReshapeFunc(F3D_reshape);
 	glutDisplayFunc(F3D_affichage);
 	glutMotionFunc(F3D_motion);
@@ -593,7 +450,7 @@ int main(int argc, char **argv)
 	glutKeyboardFunc(keyboard);
 
 	//Fenetre 2D
-	temoin = glutCreateSubWindow(window, GAP + WX / 2 + GAP, GAP, WX / 2, WY);
+	temoin = glutCreateSubWindow(window, 785+GAP, GAP, 200,200);
 	glutReshapeFunc(temoin_reshape);
 	glutDisplayFunc(temoin_affichage);
 	glutMouseFunc(Mouse);
