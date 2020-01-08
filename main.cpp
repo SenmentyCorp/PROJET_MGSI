@@ -8,9 +8,9 @@
 #include <ctime>
 #include <cstdlib>
 
-#include <glm/vec3.hpp> // glm::vec3
-#include <glm/vec4.hpp> // glm::vec4
-#include <glm/mat4x4.hpp> // glm::mat4
+#include <glm/vec3.hpp>					// glm::vec3
+#include <glm/vec4.hpp>					// glm::vec4
+#include <glm/mat4x4.hpp>				// glm::mat4
 #include <glm/gtc/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale, glm::perspective
 #include <GL/glut.h>
 
@@ -78,8 +78,8 @@ struct CouleurRVB
 
 Point P[NMAX];
 
-const int col = 100;
-const int nbPoints = col*col;
+const int col = 200;
+const int nbPoints = col * col;
 Point3D P3D[nbPoints];
 CouleurRVB Couleur[nbPoints];
 
@@ -94,41 +94,96 @@ float map(float value, float istart, float istop, float ostart, float ostop)
 	return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
 }
 
-void camPanoramique(){
+void camPanoramique()
+{
 
 	gluLookAt(300, 300, 0, 0, 0, 0, 0, 1, 0);
+}
+
+float sigmoid(float x)
+{
+	float exp_value;
+	float return_value;
+
+	/*** Exponential calculation ***/
+	exp_value = exp((double)-x);
+
+	/*** Final sigmoid value ***/
+	return_value = 1 / (1 + exp_value);
+
+	return return_value;
+}
+float npara(float x, float mult)
+{
+	float c = mult * mult;
+	return map(-x * x, -c, c, 0, 1);
+}
+float norm(float x)
+{
+	return x / 255.0;
 }
 
 void initializePoints()
 {
 	int cpt = 0;
-	float mult = 150.0;
-	float range = col /2;
+	float mult = 10.0;
+	float range = col / 2;
+	float max = -1000, min = 1000;
 	for (int i = -range; i < range; i++)
 	{
 		for (int j = -range; j < range; j++)
 		{
 
 			float ri = (i + range) / col;
-			ri *= PI*1.4;
+			ri *= PI;
 			float rj = (j + range) / col;
-			rj *= PI*1.3;
+			rj *= PI;
 
-			int temp = mult * (sinf(2.0 * (ri)) * cosf(3.0 * (rj)) * PI); //(map(i * j, -nbPoints/2, nbPoints/2, 0, nbPoints) / nbPoints)
+			int temp = mult * (sinf(2.0 * (ri - rj)) * cosf(ri - rj * ri) * cosf(3.0 * (rj - ri)) * PI * ri - rj + sqrt(2 * ri) * abs(sinf(ri * ri))) + 10;
 
 			P3D[cpt].x = i * 10;
 			P3D[cpt].y = temp;
 			P3D[cpt].z = j * 10;
 			cpt++;
+			if (max < temp)
+				max = temp;
+			if (min > temp)
+				min = temp;
 		}
 	}
 
-	for (int i = 0; i < nbPoints ; i++)
+	float yrange = max - min;
+	//cout << max << " " << min << "=" << yrange << endl;
+	for (int i = 0; i < nbPoints; i++)
 	{
+		float c1[3]={79,66,37};
+		float c2[3]={70,108,29};
+		float c3[3]={132,165,119};
+		float c4[4]={255,255,255};
+		int palier1=-3;
+		int palier2=30;
+
 		Point3D p = P3D[i];
-		Couleur[i].r = map(p.y, -mult, mult, 100 / 255.0, 150 / 255.0);
-		Couleur[i].v = map(p.y, -mult, mult, 25 / 255.0, 70 / 255.0);//0.4 ;//+ map(p.x, -nbPoints/2,nbPoints/2, 0, 0.3);
-		Couleur[i].b = map(p.y, -mult, mult, 130 / 255.0, 220 / 255.0);//0.31 ;//+ map(p.z, -nbPoints/2,nbPoints/2, 0, 0.2);
+		if (p.y <= palier1)
+		{
+			Couleur[i].r = map(p.y, min, palier1, norm(c1[0]), norm(c2[0]));
+			Couleur[i].v = map(p.y, min, palier1, norm(c1[1]), norm(c2[1]));
+			Couleur[i].b = map(p.y, min, palier1, norm(c1[2]), norm(c2[2]));
+		}
+		else if (p.y >= palier1 && p.y <= palier2)
+		{
+			Couleur[i].r = map(p.y, palier1, palier2, norm(c2[0]), norm(c3[0]));
+			Couleur[i].v = map(p.y, palier1, palier2, norm(c2[1]), norm(c3[1]));
+			Couleur[i].b = map(p.y, palier1, palier2, norm(c2[2]), norm(c3[2]));
+		}
+		else
+		{
+			Couleur[i].r = map(p.y, palier2, max, norm(c3[0]), norm(c4[0]));
+			Couleur[i].v = map(p.y, palier2, max, norm(c3[1]), norm(c4[1]));
+			Couleur[i].b = map(p.y, palier2, max, norm(c3[2]), norm(c4[2]));
+		}
+
+		//cout<<Couleur[i].r<<endl;
 	}
 }
 
@@ -330,12 +385,14 @@ void keyboard(unsigned char key, int x, int y)
 		glutPostRedisplay();
 		break;
 	case 'o':
-		if(isCamPanoramique){
+		if (isCamPanoramique)
+		{
 			theta += 0.05f;
 		}
 		break;
 	case 'p':
-		if(isCamPanoramique){
+		if (isCamPanoramique)
+		{
 			theta -= 0.05f;
 		}
 		break;
@@ -364,16 +421,17 @@ void F3D_affichage()
 	glRotatef(-(float)0.0, 1.0, 0.0, 0.0);
 	glRotatef(-(float)0.0, 0.0, 1.0, 0.0);
 
-	if(isCamPanoramique){
-		gluLookAt(sinf(theta)*300, 230, cosf(theta)*300, 0, 0, 0, 0, 1, 0);
+	if (isCamPanoramique)
+	{
+		gluLookAt(sinf(theta) * 600, 230, cosf(theta) * 600, 0, 0, 0, 0, 1, 0);
 	}
-	if(isHelico){
+	if (isHelico)
+	{
 		gluLookAt(1, 550, 0, 0, 0, 0, 0, 1, 0);
 	}
-	if(isFPS){
-
+	if (isFPS)
+	{
 	}
-	
 
 	glutPostRedisplay();
 
@@ -388,25 +446,24 @@ void temoin_affichage()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	
-    switch (bouton_action) {
-        case action1:
-            isCamPanoramique = false;
-			isHelico = false;
-			isFPS = true;
-            break;
-        case action2:
-            isCamPanoramique = false;
-			isHelico = true;
-			isFPS = false;
-            break;
-        case action3:
-            isCamPanoramique = true;
-			isHelico = false;
-			isFPS = false;
-            break;
-    }	
-	
+	switch (bouton_action)
+	{
+	case action1:
+		isCamPanoramique = false;
+		isHelico = false;
+		isFPS = true;
+		break;
+	case action2:
+		isCamPanoramique = false;
+		isHelico = true;
+		isFPS = false;
+		break;
+	case action3:
+		isCamPanoramique = true;
+		isHelico = false;
+		isFPS = false;
+		break;
+	}
 
 	glColor3f(0.0, 1.0, 0.0);
 	glPointSize(3.0);
@@ -474,9 +531,9 @@ int main(int argc, char **argv)
 	glutDisplayFunc(main_display);
 
 	//Fenetre 3D
-	F3D = glutCreateSubWindow(window, GAP, GAP, 780,780);
+	F3D = glutCreateSubWindow(window, GAP, GAP, 780, 780);
 
-	glClearColor(0.3, 0.7, 0.7, 1);
+	glClearColor(0.43, 0.75, 0.7, 1);
 	glutReshapeFunc(F3D_reshape);
 	glutDisplayFunc(F3D_affichage);
 	glutMotionFunc(F3D_motion);
@@ -484,7 +541,7 @@ int main(int argc, char **argv)
 	glutKeyboardFunc(keyboard);
 
 	//Fenetre 2D
-	temoin = glutCreateSubWindow(window, 785+GAP, GAP, 200,200);
+	temoin = glutCreateSubWindow(window, 785 + GAP, GAP, 200, 200);
 	glutReshapeFunc(temoin_reshape);
 	glutDisplayFunc(temoin_affichage);
 	glutMouseFunc(Mouse);
