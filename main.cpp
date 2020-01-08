@@ -8,10 +8,14 @@
 #include <ctime>
 #include <cstdlib>
 
+#include <glm/vec3.hpp> // glm::vec3
+#include <glm/vec4.hpp> // glm::vec4
+#include <glm/mat4x4.hpp> // glm::mat4
+#include <glm/gtc/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale, glm::perspective
 #include <GL/glut.h>
 
-#define WX 1000
-#define WY 500
+#define WX 1600
+#define WY 900
 #define GAP 10
 #define PI 3.14159
 using namespace arma;
@@ -26,13 +30,16 @@ int presse = 0;
 int anglex = 0, angley = 0, xold, yold;
 int NP = 50;
 
+bool isCamPanoramique = false, isHelico = false, isFPS = false;
+
+float theta = 0.0f;
+
 enum TypeBouton
 {
 	action1 = 0,
 	action2,
-	action3,
-	action4
-} bouton_action = action1;
+	action3
+} bouton_action = action3;
 
 struct Point
 {
@@ -84,6 +91,11 @@ static void menu(int item)
 float map(float value, float istart, float istop, float ostart, float ostop)
 {
 	return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
+}
+
+void camPanoramique(){
+
+	gluLookAt(300, 300, 0, 0, 0, 0, 0, 1, 0);
 }
 
 void initializePoints()
@@ -461,6 +473,16 @@ void keyboard(unsigned char key, int x, int y)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glutPostRedisplay();
 		break;
+	case 'o':
+		if(isCamPanoramique){
+			theta += 0.05f;
+		}
+		break;
+	case 'p':
+		if(isCamPanoramique){
+			theta -= 0.05f;
+		}
+		break;
 	}
 }
 
@@ -482,9 +504,20 @@ void F3D_affichage()
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glOrtho(-500, 500, -500, 500, -1000, 1000);
-	glRotatef(-(float)angley, 1.0, 0.0, 0.0);
-	glRotatef(-(float)anglex, 0.0, 1.0, 0.0);
+	glOrtho(-500, 500, -500, 500, -10000, 10000);
+	glRotatef(-(float)0.0, 1.0, 0.0, 0.0);
+	glRotatef(-(float)0.0, 0.0, 1.0, 0.0);
+
+	if(isCamPanoramique){
+		gluLookAt(sinf(theta)*300, 230, cosf(theta)*300, 0, 0, 0, 0, 1, 0);
+	}
+	if(isHelico){
+		gluLookAt(1, 550, 0, 0, 0, 0, 0, 1, 0);
+	}
+	if(isFPS){
+
+	}
+	
 
 	glutPostRedisplay();
 
@@ -499,24 +532,25 @@ void temoin_affichage()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	/*
+	
     switch (bouton_action) {
         case action1:
-            bezier();
+            isCamPanoramique = false;
+			isHelico = false;
+			isFPS = true;
             break;
         case action2:
-            catmullRom();
+            isCamPanoramique = false;
+			isHelico = true;
+			isFPS = false;
             break;
         case action3:
-            BSplines();
-            break;
-        case action4:
-            catmullRom();
-            bezier();
-            BSplines();
+            isCamPanoramique = true;
+			isHelico = false;
+			isFPS = false;
             break;
     }	
-	*/
+	
 
 	glColor3f(0.0, 1.0, 0.0);
 	glPointSize(3.0);
@@ -600,10 +634,9 @@ int main(int argc, char **argv)
 	glutMotionFunc(Motion);
 
 	glutCreateMenu(menu);
-	glutAddMenuEntry("Bezier", action1);
-	glutAddMenuEntry("CatmullRom", action2);
-	glutAddMenuEntry("BSplines", action3);
-	glutAddMenuEntry("TOUT", action4);
+	glutAddMenuEntry("FPS", action1);
+	glutAddMenuEntry("Helico", action2);
+	glutAddMenuEntry("Vue panoramique", action3);
 	glutAttachMenu(GLUT_RIGHT_BUTTON);
 
 	glutPostRedisplay();
