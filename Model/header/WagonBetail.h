@@ -14,13 +14,10 @@ class WagonBetail{
     public:
         WagonBetail();
         void assembler();
-        void dessiner();
         void deplacer(float x, float y, float z);
         void orienter(float x, float y, float z);
         Vecteur getMilieuRouesAvant();
-        Vecteur getMilieuRouesArriere();
-        float getLongueurTrain();
-        float getLargeurTrain();
+        float getLongueurRouePrevRoueSuiv();
         
         Vecteur direction;
 
@@ -30,6 +27,8 @@ class WagonBetail{
         const float largeurTrain=80;
         const float longueurTrain=250;
         const float hauteurTrain=100;
+        float decalageAttache;
+        float coeffLongueurTrain;
         Vecteur positionRoueAvant;
         Vecteur positionRoueArriere;
 };

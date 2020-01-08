@@ -494,9 +494,23 @@ void F3D_affichage()
 	//glutSolidCube(500);
 	//TracePoints();
 
+	glEnable(GL_DEPTH_TEST);
+
 	WagonBetail* wb = new WagonBetail;
 	wb->assembler();
-	
+
+	WagonBetail* wb2 = new WagonBetail;
+	wb2->deplacer(wb2->getLongueurRouePrevRoueSuiv(), 0, 0);
+	wb2->assembler();
+
+	WagonBetail* wb3 = new WagonBetail;
+	wb3->deplacer(-wb3->getLongueurRouePrevRoueSuiv(), 0, 0);
+	wb3->assembler();
+
+	WagonBetail* wb4 = new WagonBetail;
+	wb4->deplacer(-2*wb4->getLongueurRouePrevRoueSuiv(), 0, 0);
+	wb4->assembler();
+
 	glutSwapBuffers();
 }
 
