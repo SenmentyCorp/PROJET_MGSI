@@ -14,7 +14,7 @@
 #include <glm/gtc/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale, glm::perspective
 #include <GL/glut.h>
 
-#define WX 1000
+#define WX 1300
 #define WY 790
 #define GAP 10
 #define PI 3.14159
@@ -189,8 +189,8 @@ void parcours3D()
 
 	for (int i = 0; i < NB_POINTS * DISCRET; i++)
 	{
-		double x = rails[i].x /10;
-		double z = rails[i].y /10;
+		double x = (rails[i].x +range)/col;
+		double z = (rails[i].y +range)/col;
 		int range = col / 2;
 		float ri = (x + range) / col;
 		ri *= PI;
@@ -199,7 +199,7 @@ void parcours3D()
 
 		float temp = param(ri, rj);
 		glVertex3d(rails[i].x, temp, rails[i].y);
-		cout << temp << endl;
+		//cout << temp << endl;
 	}
 	
 	glVertex3d(rails[0].x, param((rails[0].x / 10. + range) / col*PI, (rails[0].y / 10. + range) / col*PI), rails[0].y);
@@ -285,16 +285,18 @@ void initializePoints()
 		}
 	}
 }
+
 void tracePointsParcours()
 {
 	glColor3f(0.0, 1.0, 0.0);
 	glBegin(GL_POINTS);
-	for (int i = 0; i < N_Parcours - 3; i++)
+	for (int i = 0; i < NB_POINTS; i++)
 	{
 		glVertex2f(P_Parcours[i].x, P_Parcours[i].y);
 	}
 	glEnd();
-} //&&&&&&&&&&&&&&&&&&
+} 
+
 void TracePoints()
 {
 
@@ -355,32 +357,10 @@ void Mouse(int button, int state, int x, int y)
 	glutSetCursor(GLUT_CURSOR_CROSSHAIR);
 	glGetIntegerv(GL_VIEWPORT, viewport);
 
-	if (button == GLUT_RIGHT_BUTTON)
+	if (button == GLUT_LEFT_BUTTON)
 	{
-		/*droite = 0;
 		gauche = 1;
-		glColor3f(0.0, 1.0, 0.0);
-		glPointSize(3.0);
-		glInitNames();
-		glPushName(1);
-
-		P[N].x = x;
-		P[N].y = viewport[3] - y;
-
-		glLoadName(N);
-		glBegin(GL_POINTS);
-		glVertex2f(P[N].x, P[N].y);
-		glEnd();
-
-		if (state == GLUT_UP)
-			N++;
-		glutPostRedisplay();
-	}
-
-	if (glutGetModifiers() != GLUT_ACTIVE_CTRL && button == GLUT_LEFT_BUTTON)
-	{*/
-		gauche = 0;
-		droite = 1;
+		droite = 0;
 		if (state == GLUT_DOWN)
 		{
 			GLuint *selectBuf = new GLuint[200];
@@ -434,7 +414,7 @@ void Motion(int x, int y)
 	GLint viewport[4];
 	glGetIntegerv(GL_VIEWPORT, viewport);
 
-	if ((droite) && (mp != -1))
+	if ((gauche) && (mp != -1))
 	{
 		int i = mp;
 		P_Parcours[i].x = x;
@@ -497,7 +477,8 @@ void temoin_reshape(int width, int height)
 	glOrtho(0.0, viewport[2], 0.0, viewport[3], -prof, prof);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();*/
-} //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+} 
+
 
 void F3D_affichage()
 {
@@ -555,18 +536,10 @@ void temoin_affichage()
 	}
 
 	glColor3f(0.0, 1.0, 0.0);
-	glPointSize(3.0);
-	glInitNames();
-	glPushName(1);
-	for (int i = 0; i < N_Parcours; i++)
-	{
-		glLoadName(i);
-		glBegin(GL_POINTS);
-		glVertex2f(P_Parcours[i].x, P_Parcours[i].y);
-		glEnd();
-	}
-	tracePointsParcours();
+	glPointSize(5.0);
+	
 	catmullromParcours();
+	tracePointsParcours();
 
 	//TracePoints();
 	glutPostRedisplay();
@@ -632,7 +605,7 @@ int main(int argc, char **argv)
 	glutKeyboardFunc(keyboard);
 
 	//Fenetre 2D
-	temoin = glutCreateSubWindow(window, 785 + GAP, GAP, 200, 200);
+	temoin = glutCreateSubWindow(window, 785 + GAP, GAP, 500, 500);
 	glutReshapeFunc(temoin_reshape);
 	glutDisplayFunc(temoin_affichage);
 	glutMouseFunc(Mouse);
@@ -647,5 +620,5 @@ int main(int argc, char **argv)
 	glutPostRedisplay();
 
 	glutMainLoop();
-	return (0);
+	return 0;
 }
