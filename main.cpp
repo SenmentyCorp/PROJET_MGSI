@@ -7,6 +7,7 @@
 #include <armadillo>
 #include "Model/header/WagonBetail.h"
 #include "Model/header/Vecteur.h"
+#include "Model/header/Arbre.h"
 #include <ctime>
 #include <cstdlib>
 
@@ -507,6 +508,21 @@ void F3D_affichage()
 	wb3->deplacer(-wb3->getLongueurRouePrevRoueSuiv(), 0, 0);
 	wb3->orienter(0, 30, 0);
 	wb3->assembler();
+
+	Arbre* a1 = new Arbre;
+	a1->modifierTaille(0.8);
+	a1->deplacer(150, 0, 250);
+	a1->assembler();
+
+	Arbre* a2 = new Arbre;
+	a2->modifierTaille(1.2);
+	a2->deplacer(-70, 0, -140);
+	a2->assembler();
+
+	Arbre* a3 = new Arbre;
+	a3->modifierTaille(0.6);
+	a3->deplacer(-140, 0, 140);
+	a3->assembler();
 
 	glutSwapBuffers();
 }
