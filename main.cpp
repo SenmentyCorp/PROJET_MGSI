@@ -76,8 +76,6 @@ struct CouleurRVB
 	}
 };
 
-Point P[NMAX];
-
 const int col = 200;
 const int nbPoints = col * col;
 Point3D P3D[nbPoints];
@@ -175,38 +173,38 @@ void catmullromParcours()
 	}
 }
 
-int param(int ri, int rj)
+float param(float ri, float rj)
 {
-	return 10.0 * (sinf(2.0 * (ri - rj)) * cosf(ri - rj * ri) * cosf(3.0 * (rj - ri)) * PI * ri - rj + sqrt(2 * ri) * abs(sinf(ri * ri)));
-}
-
-int calculHauteur(int i)
-{
-	double x = rails[i].x / 10.;
-	double z = rails[i].y / 10.;
-
-	float ri = (x + 50) / 100.0;
-	ri *= PI;
-	float rj = (z + 50) / 100.0;
-	rj *= PI;
-
-	int temp = param(ri, rj);
+	float temp = 10.0 * (sinf(2.0 * (ri - rj)) * cosf(ri - rj * ri) * cosf(3.0 * (rj - ri)) * PI * ri - rj + sqrt(2 * ri) * abs(sinf(ri * ri)));
 	return temp;
 }
 
 void parcours3D()
 {
+	glPushMatrix();
+	//glRotatef(90,0,1,0);
 	glColor3f(1.0, 0.0, 0.0);
 	glBegin(GL_LINE_STRIP);
-	int i, temp;
-	for (i = 0; i < NB_POINTS * DISCRET; i++)
+	float range = col / 2;
+
+	for (int i = 0; i < NB_POINTS * DISCRET; i++)
 	{
-		temp = calculHauteur(i);
+		double x = rails[i].x /10;
+		double z = rails[i].y /10;
+		int range = col / 2;
+		float ri = (x + range) / col;
+		ri *= PI;
+		float rj = (z + range) / col;
+		rj *= PI;
+
+		float temp = param(ri, rj);
 		glVertex3d(rails[i].x, temp, rails[i].y);
+		cout << temp << endl;
 	}
-	temp = calculHauteur(0);
-	glVertex3d(rails[0].x, temp, rails[0].y);
+	
+	glVertex3d(rails[0].x, param((rails[0].x / 10. + range) / col*PI, (rails[0].y / 10. + range) / col*PI), rails[0].y);
 	glEnd();
+	glPopMatrix();
 } //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
 void camPanoramique()
@@ -223,11 +221,7 @@ float sigmoid(float x)
 	return_value = 1 / (1 + exp_value);
 	return return_value;
 }
-float npara(float x, float mult)
-{
-	float c = mult * mult;
-	return map(-x * x, -c, c, 0, 1);
-}
+
 float norm(float x)
 {
 	return x / 255.0;
@@ -244,11 +238,11 @@ void initializePoints()
 		{
 
 			float ri = (i + range) / col;
-			ri *= PI * 1;
+			ri *= PI;
 			float rj = (j + range) / col;
-			rj *= PI * 1;
+			rj *= PI;
 
-			int temp = param(ri, rj);
+			float temp = param(ri, rj);
 			P3D[cpt].x = i * (10 / (col / 100));
 			P3D[cpt].y = temp;
 			P3D[cpt].z = j * (10 / (col / 100));
@@ -260,7 +254,6 @@ void initializePoints()
 		}
 	}
 
-	float yrange = max - min;
 	//cout << max << " " << min << "=" << yrange << endl;
 	for (int i = 0; i < nbPoints; i++)
 	{
@@ -451,7 +444,7 @@ void Motion(int x, int y)
 		glutPostRedisplay();
 	}
 }
-
+int cam = 1000;
 void keyboard(unsigned char key, int x, int y)
 {
 	switch (key)
@@ -476,6 +469,12 @@ void keyboard(unsigned char key, int x, int y)
 			theta -= 0.05f;
 		}
 		break;
+	case '+':
+		cam -= 5;
+		break;
+	case '-':
+		cam += 5;
+		break;
 	}
 }
 
@@ -489,16 +488,15 @@ void F3D_reshape(int x, int y)
 
 void temoin_reshape(int width, int height)
 {
-	GLint viewport[4];
+	/*GLint viewport[4];
 	glViewport(0, 0, width, height);
 	glGetIntegerv(GL_VIEWPORT, viewport);
 	float prof = viewport[2] > viewport[3] ? viewport[2] : viewport[3];
-
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(0.0, viewport[2], 0.0, viewport[3], -prof, prof);
 	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+	glLoadIdentity();*/
 } //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
 void F3D_affichage()
@@ -507,7 +505,7 @@ void F3D_affichage()
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glOrtho(-5000, 5000, -5000, 5000, -10000, 10000);
+	glOrtho(-cam, cam, -cam, cam, -10000, 10000);
 	glRotatef(-(float)0.0, 1.0, 0.0, 0.0);
 	glRotatef(-(float)0.0, 0.0, 1.0, 0.0);
 	glEnable(GL_DEPTH_TEST);
@@ -649,5 +647,5 @@ int main(int argc, char **argv)
 	glutPostRedisplay();
 
 	glutMainLoop();
-	return (1);
+	return (0);
 }
