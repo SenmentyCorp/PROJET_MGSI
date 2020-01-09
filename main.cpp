@@ -88,11 +88,126 @@ static void menu(int item)
 	bouton_action = static_cast<TypeBouton>(item);
 	glutPostRedisplay();
 }
+// ---
+const int NB_POINTS = 16;
+const int DISCRET = 10;
+const int N_Parcours = NB_POINTS + 3;
+Point P_Parcours[NMAX];
+Point rails[NB_POINTS * DISCRET];
+int init = 0;
 
 float map(float value, float istart, float istop, float ostart, float ostop)
 {
 	return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
 }
+
+void initPointsParcours()
+{
+	P_Parcours[0] = {171., 472.};
+	P_Parcours[1] = {260., 471.};
+	P_Parcours[2] = {316., 426.};
+	P_Parcours[3] = {297., 343.};
+	P_Parcours[4] = {254., 262.};
+	P_Parcours[5] = {263., 195.};
+	P_Parcours[6] = {304., 136.};
+	P_Parcours[7] = {297., 63.};
+	P_Parcours[8] = {188., 50.};
+	P_Parcours[9] = {142., 104.};
+	P_Parcours[10] = {67., 121.};
+	P_Parcours[11] = {62., 218.};
+	P_Parcours[12] = {129., 263.};
+	P_Parcours[13] = {143., 351.};
+	P_Parcours[14] = {104., 399.};
+	P_Parcours[15] = {110., 457.};
+}
+
+void catmullromParcours()
+{
+	mat m = mat(4, 4);
+	m << -s << 2 - s << s - 2 << s << endr
+	  << 2 * s << s - 3 << 3 - 2 * s << -s << endr
+	  << -s << 0 << s << 0 << endr
+	  << 0 << 1 << 0 << 0 << endr;
+
+	if (init == 0)
+	{
+		initPointsParcours();
+		init = 1;
+	}
+
+	int i;
+	for (i = 0; i < N_Parcours; i++)
+	{
+		colvec vectX = colvec(4);
+		vectX << P_Parcours[i % NB_POINTS].x
+			  << P_Parcours[(i + 1) % NB_POINTS].x
+			  << P_Parcours[(i + 2) % NB_POINTS].x
+			  << P_Parcours[(i + 3) % NB_POINTS].x;
+
+		colvec vectY = colvec(4);
+		vectY << P_Parcours[i % NB_POINTS].y
+			  << P_Parcours[(i + 1) % NB_POINTS].y
+			  << P_Parcours[(i + 2) % NB_POINTS].y
+			  << P_Parcours[(i + 3) % NB_POINTS].y;
+
+		mat prodMPx = m * vectX;
+		mat prodMPy = m * vectY;
+
+		glColor3f(1.0, 0.0, 0.0);
+		glBegin(GL_LINE_STRIP);
+
+		int t;
+		for (t = 0; t <= DISCRET; t++)
+		{
+			double a = (double)t / 10.;
+			rowvec rv = rowvec(4);
+			rv << (double)(pow(a, 3.)) << (double)(pow(a, 2.)) << a << 1.;
+			mat cX = rv * prodMPx;
+			mat cY = rv * prodMPy;
+
+			glVertex2f(cX(0, 0), cY(0, 0));
+			if (t != DISCRET)
+			{
+				rails[(i % NB_POINTS) * DISCRET + (int)(a * DISCRET)] = {(double)cX(0, 0) * 2. - 500., (double)cY(0, 0) * 2. - 500.};
+			}
+		}
+		glEnd();
+	}
+}
+
+int param(int ri, int rj)
+{
+	return 10.0 * (sinf(2.0 * (ri - rj)) * cosf(ri - rj * ri) * cosf(3.0 * (rj - ri)) * PI * ri - rj + sqrt(2 * ri) * abs(sinf(ri * ri)));
+}
+
+int calculHauteur(int i)
+{
+	double x = rails[i].x / 10.;
+	double z = rails[i].y / 10.;
+
+	float ri = (x + 50) / 100.0;
+	ri *= PI;
+	float rj = (z + 50) / 100.0;
+	rj *= PI;
+
+	int temp = param(ri, rj);
+	return temp;
+}
+
+void parcours3D()
+{
+	glColor3f(1.0, 0.0, 0.0);
+	glBegin(GL_LINE_STRIP);
+	int i, temp;
+	for (i = 0; i < NB_POINTS * DISCRET; i++)
+	{
+		temp = calculHauteur(i);
+		glVertex3d(rails[i].x, temp, rails[i].y);
+	}
+	temp = calculHauteur(0);
+	glVertex3d(rails[0].x, temp, rails[0].y);
+	glEnd();
+} //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
 void camPanoramique()
 {
@@ -104,13 +219,8 @@ float sigmoid(float x)
 {
 	float exp_value;
 	float return_value;
-
-	/*** Exponential calculation ***/
 	exp_value = exp((double)-x);
-
-	/*** Final sigmoid value ***/
 	return_value = 1 / (1 + exp_value);
-
 	return return_value;
 }
 float npara(float x, float mult)
@@ -126,7 +236,6 @@ float norm(float x)
 void initializePoints()
 {
 	int cpt = 0;
-	float mult = 10.0;
 	float range = col / 2;
 	float max = -1000, min = 1000;
 	for (int i = -range; i < range; i++)
@@ -135,15 +244,14 @@ void initializePoints()
 		{
 
 			float ri = (i + range) / col;
-			ri *= PI*1.4;
+			ri *= PI * 1;
 			float rj = (j + range) / col;
-			rj *= PI*1.4;
+			rj *= PI * 1;
 
-			int temp = mult * (sinf(2.0 * (ri - rj)) * cosf(ri - rj * ri) * cosf(3.0 * (rj - ri)) * PI * ri - rj + sqrt(2 * ri) * abs(sinf(ri * ri))) + 10;
-
-			P3D[cpt].x = i * (10/(col/100));
+			int temp = param(ri, rj);
+			P3D[cpt].x = i * (10 / (col / 100));
 			P3D[cpt].y = temp;
-			P3D[cpt].z = j * (10/(col/100));
+			P3D[cpt].z = j * (10 / (col / 100));
 			cpt++;
 			if (max < temp)
 				max = temp;
@@ -182,11 +290,18 @@ void initializePoints()
 			Couleur[i].v = map(p.y, palier2, max, norm(c3[1]), norm(c4[1]));
 			Couleur[i].b = map(p.y, palier2, max, norm(c3[2]), norm(c4[2]));
 		}
-
-		//cout<<Couleur[i].r<<endl;
 	}
 }
-
+void tracePointsParcours()
+{
+	glColor3f(0.0, 1.0, 0.0);
+	glBegin(GL_POINTS);
+	for (int i = 0; i < N_Parcours - 3; i++)
+	{
+		glVertex2f(P_Parcours[i].x, P_Parcours[i].y);
+	}
+	glEnd();
+} //&&&&&&&&&&&&&&&&&&
 void TracePoints()
 {
 
@@ -215,54 +330,18 @@ void TracePoints()
 	}
 	glEnd();
 }
-
-void catmullRom()
-{
-	mat matCatmullRom = {{-s, 2 - s, s - 2, s}, {2 * s, s - 3, 3 - 2 * s, -s}, {-s, 0, s, 0}, {0, 1, 0, 0}};
-
-	mat matPointX(4, 1);
-	mat matPointY(4, 1);
-
-	for (int i = 3; i < N; i++)
-	{
-		if (N > 3 && i % 1 == 0)
-		{
-			for (int k = 0; k < 4; k++)
-			{
-				double coordX = P[i - k].x;
-				double coordY = P[i - k].y;
-
-				matPointX.at(k, 0) = coordX;
-				matPointY.at(k, 0) = coordY;
-			}
-
-			glBegin(GL_LINE_STRIP);
-			glColor3f(1.0f, 1.0f, 0.0f);
-			for (double j = 0; j < 1; j += 0.01)
-			{
-
-				mat matParam = {{pow(j, 3), pow(j, 2), j, 1}};
-
-				mat resultMultX = matParam * matCatmullRom * matPointX;
-				mat resultMultY = matParam * matCatmullRom * matPointY;
-
-				glVertex2f(resultMultX(0, 0), resultMultY(0, 0));
-			}
-			glEnd();
-		}
-	}
-}
-
 void main_reshape(int width, int height)
 {
 	GLint viewport[4];
 
 	glViewport(0, 0, width, height);
 	glGetIntegerv(GL_VIEWPORT, viewport);
+	float prof = viewport[2] > viewport[3] ? viewport[2] : viewport[3];
+
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
-	glOrtho(0.0, viewport[2], 0.0, viewport[3], -50.0, 50.0);
+	glOrtho(0.0, viewport[2], 0.0, viewport[3], -prof, prof);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 }
@@ -271,6 +350,7 @@ void main_display(void)
 {
 	glClearColor(0.5, 0.5, 0.5, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_DEPTH_TEST);
 	glutPostRedisplay();
 	glutSwapBuffers();
 }
@@ -282,9 +362,9 @@ void Mouse(int button, int state, int x, int y)
 	glutSetCursor(GLUT_CURSOR_CROSSHAIR);
 	glGetIntegerv(GL_VIEWPORT, viewport);
 
-	if (glutGetModifiers() == GLUT_ACTIVE_CTRL && button == GLUT_LEFT_BUTTON)
+	if (button == GLUT_RIGHT_BUTTON)
 	{
-		droite = 0;
+		/*droite = 0;
 		gauche = 1;
 		glColor3f(0.0, 1.0, 0.0);
 		glPointSize(3.0);
@@ -305,7 +385,7 @@ void Mouse(int button, int state, int x, int y)
 	}
 
 	if (glutGetModifiers() != GLUT_ACTIVE_CTRL && button == GLUT_LEFT_BUTTON)
-	{
+	{*/
 		gauche = 0;
 		droite = 1;
 		if (state == GLUT_DOWN)
@@ -328,11 +408,11 @@ void Mouse(int button, int state, int x, int y)
 			glInitNames();
 			glPushName(1);
 
-			for (int i = 0; i < N; i++)
+			for (int i = 0; i < N_Parcours; i++)
 			{
 				glLoadName(i);
 				glBegin(GL_POINTS);
-				glVertex2f(P[i].x, P[i].y);
+				glVertex2f(P_Parcours[i].x, P_Parcours[i].y);
 				glEnd();
 			}
 
@@ -364,9 +444,9 @@ void Motion(int x, int y)
 	if ((droite) && (mp != -1))
 	{
 		int i = mp;
-		P[i].x = x;
-		P[i].y = viewport[3] - y;
-		//TracePoints();
+		P_Parcours[i].x = x;
+		P_Parcours[i].y = viewport[3] - y;
+		tracePointsParcours();
 
 		glutPostRedisplay();
 	}
@@ -409,7 +489,17 @@ void F3D_reshape(int x, int y)
 
 void temoin_reshape(int width, int height)
 {
-}
+	GLint viewport[4];
+	glViewport(0, 0, width, height);
+	glGetIntegerv(GL_VIEWPORT, viewport);
+	float prof = viewport[2] > viewport[3] ? viewport[2] : viewport[3];
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0.0, viewport[2], 0.0, viewport[3], -prof, prof);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+} //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
 void F3D_affichage()
 {
@@ -417,7 +507,7 @@ void F3D_affichage()
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glOrtho(-500, 500, -500, 500, -10000, 10000);
+	glOrtho(-5000, 5000, -5000, 5000, -10000, 10000);
 	glRotatef(-(float)0.0, 1.0, 0.0, 0.0);
 	glRotatef(-(float)0.0, 0.0, 1.0, 0.0);
 	glEnable(GL_DEPTH_TEST);
@@ -438,6 +528,7 @@ void F3D_affichage()
 	//catmullRom3D();
 	//glutSolidCube(500);
 	TracePoints();
+	parcours3D();
 
 	glutSwapBuffers();
 }
@@ -469,13 +560,15 @@ void temoin_affichage()
 	glPointSize(3.0);
 	glInitNames();
 	glPushName(1);
-	for (int i = 0; i < N; i++)
+	for (int i = 0; i < N_Parcours; i++)
 	{
 		glLoadName(i);
 		glBegin(GL_POINTS);
-		glVertex2f(P[i].x, P[i].y);
+		glVertex2f(P_Parcours[i].x, P_Parcours[i].y);
 		glEnd();
 	}
+	tracePointsParcours();
+	catmullromParcours();
 
 	//TracePoints();
 	glutPostRedisplay();
