@@ -578,7 +578,154 @@ void F3D_mouse(int button, int state, int x, int y)
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
 		presse = 0; /* le booleen presse passe a 0 (faux) */
 }
+void traceRail(Point3D a, Point3D b) {
 
+	double dist = sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y)+(a.z-b.z)*(a.z-b.z));
+
+	double longueur = 100;
+	double hauteur = 30;
+
+	glColor3f(0.15,0.10,0.1);
+	glEnable(GL_DEPTH_TEST);
+
+	// face cote A
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur, a.y, a.z);
+		glVertex3d(a.x+longueur, a.y+hauteur, a.z);
+		glVertex3d(a.x-longueur, a.y+hauteur, a.z);
+		glVertex3d(a.x-longueur, a.y, a.z);
+	glEnd();
+
+	// face superieure
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur, a.y+hauteur, a.z+dist);
+		glVertex3d(a.x+longueur, a.y+hauteur, a.z);
+		glVertex3d(a.x-longueur, a.y+hauteur, a.z);
+		glVertex3d(a.x-longueur, a.y+hauteur, a.z+dist);
+	glEnd();
+
+	// face cote B
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur, a.y+hauteur, a.z+dist);
+		glVertex3d(a.x+longueur, a.y, a.z+dist);
+		glVertex3d(a.x-longueur, a.y, a.z+dist);
+		glVertex3d(a.x-longueur, a.y+hauteur, a.z+dist);
+	glEnd();
+
+	// face inferieure
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur, a.y, a.z);
+		glVertex3d(a.x+longueur, a.y, a.z+dist);
+		glVertex3d(a.x-longueur, a.y, a.z+dist);
+		glVertex3d(a.x-longueur, a.y, a.z);
+	glEnd();
+
+	// face droite (x positif)
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur, a.y, a.z);
+		glVertex3d(a.x+longueur, a.y, a.z+dist);
+		glVertex3d(a.x+longueur, a.y+hauteur, a.z+dist);
+		glVertex3d(a.x+longueur, a.y+hauteur, a.z);
+	glEnd();
+
+	// face gauche (x negatif)
+	glBegin(GL_QUADS);
+		glVertex3d(a.x-longueur, a.y, a.z);
+		glVertex3d(a.x-longueur, a.y+hauteur, a.z);
+		glVertex3d(a.x-longueur, a.y+hauteur, a.z+dist);
+		glVertex3d(a.x-longueur, a.y, a.z+dist);
+	glEnd();
+
+	// ---
+	// RAIL DROIT
+
+	glColor3f(0.4,0.4,0.4);
+
+	// face A
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur, a.z);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur, a.z);
+	glEnd();
+
+	// face superieure
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur*1.5, a.z+dist);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur*1.5, a.z+dist);
+	glEnd();
+
+	// face B
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur, a.z+dist);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur*1.5, a.z+dist);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur*1.5, a.z+dist);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur, a.z+dist);
+	glEnd();
+
+	// face droite (x 2/3)
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur, a.z);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur, a.z+dist);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur*1.5, a.z+dist);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur*1.5, a.z);
+	glEnd();
+
+	// face gauche (x 1/2)
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur, a.z+dist);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur, a.z);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur*1.5, a.z+dist);
+	glEnd();
+
+
+
+
+	// RAIL GAUCHE
+
+	// face A
+	glBegin(GL_QUADS);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur, a.z);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur, a.z);
+	glEnd();
+
+	// face superieure
+	glBegin(GL_QUADS);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur*1.5, a.z+dist);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur*1.5, a.z+dist);
+	glEnd();
+
+	// face B
+	glBegin(GL_QUADS);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur, a.z+dist);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur*1.5, a.z+dist);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur*1.5, a.z+dist);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur, a.z+dist);
+	glEnd();
+
+	// face droite (x 2/3)
+	glBegin(GL_QUADS);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur, a.z);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur, a.z+dist);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur*1.5, a.z+dist);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur*1.5, a.z);
+	glEnd();
+
+	// face gauche (x 1/2)
+	glBegin(GL_QUADS);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur, a.z+dist);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur, a.z);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur*1.5, a.z+dist);
+	glEnd();
+}
 int main(int argc, char **argv)
 {
 	srand(static_cast<unsigned>(time(0)));
