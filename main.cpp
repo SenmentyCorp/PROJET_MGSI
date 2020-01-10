@@ -106,13 +106,13 @@ float map(float value, float istart, float istop, float ostart, float ostop)
 void initPointsParcours()
 {
 	P_Parcours[0] = {171., 472.};
-	P_Parcours[1] = {260., 471.};
-	P_Parcours[2] = {316., 426.};
+	P_Parcours[1] = {360., 471.};
+	P_Parcours[2] = {396., 403.};
 	P_Parcours[3] = {297., 343.};
-	P_Parcours[4] = {254., 262.};
-	P_Parcours[5] = {263., 195.};
+	P_Parcours[4] = {284., 262.};
+	P_Parcours[5] = {263., 174.};
 	P_Parcours[6] = {304., 136.};
-	P_Parcours[7] = {297., 63.};
+	P_Parcours[7] = {420., 41.};
 	P_Parcours[8] = {188., 50.};
 	P_Parcours[9] = {142., 104.};
 	P_Parcours[10] = {67., 121.};
