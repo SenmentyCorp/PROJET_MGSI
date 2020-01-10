@@ -76,8 +76,6 @@ struct CouleurRVB
 	}
 };
 
-Point P[NMAX];
-
 const int col = 200;
 const int nbPoints = col * col;
 Point3D P3D[nbPoints];
@@ -90,7 +88,7 @@ static void menu(int item)
 }
 // ---
 const int NB_POINTS = 16;
-const int DISCRET = 10;
+const int DISCRET = 40;
 const int N_Parcours = NB_POINTS + 3;
 Point P_Parcours[NMAX];
 Point rails[NB_POINTS * DISCRET];
@@ -159,7 +157,7 @@ void catmullromParcours()
 		int t;
 		for (t = 0; t <= DISCRET; t++)
 		{
-			double a = (double)t / 10.;
+			double a = (double)t / (double)DISCRET;
 			rowvec rv = rowvec(4);
 			rv << (double)(pow(a, 3.)) << (double)(pow(a, 2.)) << a << 1.;
 			mat cX = rv * prodMPx;
@@ -168,29 +166,30 @@ void catmullromParcours()
 			glVertex2f(cX(0, 0), cY(0, 0));
 			if (t != DISCRET)
 			{
-				rails[(i % NB_POINTS) * DISCRET + (int)(a * DISCRET)] = {(double)cX(0, 0) * 2. - 500., (double)cY(0, 0) * 2. - 500.};
+				rails[(i % NB_POINTS) * DISCRET + (int)(a * DISCRET)] = {-((double)cX(0, 0) * 2. - 500.), (double)cY(0, 0) * 2. - 500.};
 			}
 		}
 		glEnd();
 	}
 }
 
-int param(int ri, int rj)
+double param(double ri, double rj)
 {
-	return 10.0 * (sinf(2.0 * (ri - rj)) * cosf(ri - rj * ri) * cosf(3.0 * (rj - ri)) * PI * ri - rj + sqrt(2 * ri) * abs(sinf(ri * ri)));
+	double temp = 10.0 * (sinf(2.0 * (ri - rj)) * cosf(ri - rj * ri) * cosf(3.0 * (rj - ri)) * PI * ri - rj + sqrt(2.0 * abs(ri)) * abs(sinf(ri * ri)));
+	return temp;
 }
 
-int calculHauteur(int i)
-{
-	double x = rails[i].x / 10.;
-	double z = rails[i].y / 10.;
+double calculHauteur(int i) {
+	double range = col / 2.;
+	double x = rails[i].x/(10. / ((double) col / 100.));
+	double z = rails[i].y/(10. / ((double) col / 100.));
 
-	float ri = (x + 50) / 100.0;
-	ri *= PI;
-	float rj = (z + 50) / 100.0;
-	rj *= PI;
+	double ri=(x+range)/(double) col;
+	ri*=PI;
+	double rj=(z+range)/(double) col;
+	rj*=PI;
 
-	int temp = param(ri, rj);
+	double temp=param(ri,rj);
 	return temp;
 }
 
@@ -198,36 +197,17 @@ void parcours3D()
 {
 	glColor3f(1.0, 0.0, 0.0);
 	glBegin(GL_LINE_STRIP);
-	int i, temp;
-	for (i = 0; i < NB_POINTS * DISCRET; i++)
-	{
+	double temp;
+
+	for (int i = 0; i < NB_POINTS * DISCRET; i++) {
 		temp = calculHauteur(i);
-		glVertex3d(rails[i].x, temp, rails[i].y);
+		glVertex3d(rails[i].x, temp+0.1, rails[i].y);
 	}
 	temp = calculHauteur(0);
-	glVertex3d(rails[0].x, temp, rails[0].y);
+	glVertex3d(rails[0].x, temp+0.1, rails[0].y);
 	glEnd();
-} //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-
-void camPanoramique()
-{
-
-	gluLookAt(300, 300, 0, 0, 0, 0, 0, 1, 0);
 }
 
-float sigmoid(float x)
-{
-	float exp_value;
-	float return_value;
-	exp_value = exp((double)-x);
-	return_value = 1 / (1 + exp_value);
-	return return_value;
-}
-float npara(float x, float mult)
-{
-	float c = mult * mult;
-	return map(-x * x, -c, c, 0, 1);
-}
 float norm(float x)
 {
 	return x / 255.0;
@@ -244,11 +224,11 @@ void initializePoints()
 		{
 
 			float ri = (i + range) / col;
-			ri *= PI * 1;
+			ri *= PI;
 			float rj = (j + range) / col;
-			rj *= PI * 1;
+			rj *= PI;
 
-			int temp = param(ri, rj);
+			float temp = param(ri, rj);
 			P3D[cpt].x = i * (10 / (col / 100));
 			P3D[cpt].y = temp;
 			P3D[cpt].z = j * (10 / (col / 100));
@@ -260,7 +240,6 @@ void initializePoints()
 		}
 	}
 
-	float yrange = max - min;
 	//cout << max << " " << min << "=" << yrange << endl;
 	for (int i = 0; i < nbPoints; i++)
 	{
@@ -291,6 +270,22 @@ void initializePoints()
 			Couleur[i].b = map(p.y, palier2, max, norm(c3[2]), norm(c4[2]));
 		}
 	}
+}
+
+
+void camPanoramique()
+{
+
+	gluLookAt(300, 300, 0, 0, 0, 0, 0, 1, 0);
+}
+
+float sigmoid(float x)
+{
+	float exp_value;
+	float return_value;
+	exp_value = exp((double)-x);
+	return_value = 1 / (1 + exp_value);
+	return return_value;
 }
 
 void tracePointsParcours()
@@ -431,7 +426,7 @@ void Motion(int x, int y)
 		glutPostRedisplay();
 	}
 }
-
+int cam = 1000;
 void keyboard(unsigned char key, int x, int y)
 {
 	switch (key)
@@ -456,6 +451,12 @@ void keyboard(unsigned char key, int x, int y)
 			theta -= 0.05f;
 		}
 		break;
+	case '+':
+		cam -= 5;
+		break;
+	case '-':
+		cam += 5;
+		break;
 	}
 }
 
@@ -473,7 +474,6 @@ void temoin_reshape(int width, int height)
 	glViewport(0, 0, width, height);
 	glGetIntegerv(GL_VIEWPORT, viewport);
 	float prof = viewport[2] > viewport[3] ? viewport[2] : viewport[3];
-
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(0.0, viewport[2], 0.0, viewport[3], -prof, prof);
@@ -488,7 +488,7 @@ void F3D_affichage()
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glOrtho(-5000, 5000, -5000, 5000, -10000, 10000);
+	glOrtho(-cam, cam, -cam, cam, -10000, 10000);
 	glRotatef(-(float)0.0, 1.0, 0.0, 0.0);
 	glRotatef(-(float)0.0, 0.0, 1.0, 0.0);
 	glEnable(GL_DEPTH_TEST);
@@ -580,7 +580,154 @@ void F3D_mouse(int button, int state, int x, int y)
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
 		presse = 0; /* le booleen presse passe a 0 (faux) */
 }
+void traceRail(Point3D a, Point3D b) {
 
+	double dist = sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y)+(a.z-b.z)*(a.z-b.z));
+
+	double longueur = 100;
+	double hauteur = 30;
+
+	glColor3f(0.15,0.10,0.1);
+	glEnable(GL_DEPTH_TEST);
+
+	// face cote A
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur, a.y, a.z);
+		glVertex3d(a.x+longueur, a.y+hauteur, a.z);
+		glVertex3d(a.x-longueur, a.y+hauteur, a.z);
+		glVertex3d(a.x-longueur, a.y, a.z);
+	glEnd();
+
+	// face superieure
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur, a.y+hauteur, a.z+dist);
+		glVertex3d(a.x+longueur, a.y+hauteur, a.z);
+		glVertex3d(a.x-longueur, a.y+hauteur, a.z);
+		glVertex3d(a.x-longueur, a.y+hauteur, a.z+dist);
+	glEnd();
+
+	// face cote B
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur, a.y+hauteur, a.z+dist);
+		glVertex3d(a.x+longueur, a.y, a.z+dist);
+		glVertex3d(a.x-longueur, a.y, a.z+dist);
+		glVertex3d(a.x-longueur, a.y+hauteur, a.z+dist);
+	glEnd();
+
+	// face inferieure
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur, a.y, a.z);
+		glVertex3d(a.x+longueur, a.y, a.z+dist);
+		glVertex3d(a.x-longueur, a.y, a.z+dist);
+		glVertex3d(a.x-longueur, a.y, a.z);
+	glEnd();
+
+	// face droite (x positif)
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur, a.y, a.z);
+		glVertex3d(a.x+longueur, a.y, a.z+dist);
+		glVertex3d(a.x+longueur, a.y+hauteur, a.z+dist);
+		glVertex3d(a.x+longueur, a.y+hauteur, a.z);
+	glEnd();
+
+	// face gauche (x negatif)
+	glBegin(GL_QUADS);
+		glVertex3d(a.x-longueur, a.y, a.z);
+		glVertex3d(a.x-longueur, a.y+hauteur, a.z);
+		glVertex3d(a.x-longueur, a.y+hauteur, a.z+dist);
+		glVertex3d(a.x-longueur, a.y, a.z+dist);
+	glEnd();
+
+	// ---
+	// RAIL DROIT
+
+	glColor3f(0.4,0.4,0.4);
+
+	// face A
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur, a.z);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur, a.z);
+	glEnd();
+
+	// face superieure
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur*1.5, a.z+dist);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur*1.5, a.z+dist);
+	glEnd();
+
+	// face B
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur, a.z+dist);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur*1.5, a.z+dist);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur*1.5, a.z+dist);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur, a.z+dist);
+	glEnd();
+
+	// face droite (x 2/3)
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur, a.z);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur, a.z+dist);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur*1.5, a.z+dist);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur*1.5, a.z);
+	glEnd();
+
+	// face gauche (x 1/2)
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur, a.z+dist);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur, a.z);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur*1.5, a.z+dist);
+	glEnd();
+
+
+
+
+	// RAIL GAUCHE
+
+	// face A
+	glBegin(GL_QUADS);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur, a.z);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur, a.z);
+	glEnd();
+
+	// face superieure
+	glBegin(GL_QUADS);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur*1.5, a.z+dist);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur*1.5, a.z+dist);
+	glEnd();
+
+	// face B
+	glBegin(GL_QUADS);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur, a.z+dist);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur*1.5, a.z+dist);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur*1.5, a.z+dist);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur, a.z+dist);
+	glEnd();
+
+	// face droite (x 2/3)
+	glBegin(GL_QUADS);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur, a.z);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur, a.z+dist);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur*1.5, a.z+dist);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur*1.5, a.z);
+	glEnd();
+
+	// face gauche (x 1/2)
+	glBegin(GL_QUADS);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur, a.z+dist);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur, a.z);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur*1.5, a.z+dist);
+	glEnd();
+}
 int main(int argc, char **argv)
 {
 	srand(static_cast<unsigned>(time(0)));
