@@ -490,6 +490,15 @@ void keyboard(unsigned char key, int x, int y)
 	case '-':
 		cam += 5;
 		break;
+	case 'F':
+		bouton_action = action1;
+		break;
+	case 'H':
+		bouton_action = action2;
+		break;
+	case 'G':
+		bouton_action = action3;
+		break;
 	}
 }
 
@@ -802,9 +811,9 @@ int main(int argc, char **argv)
 	glutMotionFunc(Motion);
 
 	glutCreateMenu(menu);
-	glutAddMenuEntry("FPS", action1);
+	/*glutAddMenuEntry("FPS", action1);
 	glutAddMenuEntry("Helico", action2);
-	glutAddMenuEntry("Vue panoramique", action3);
+	glutAddMenuEntry("Vue panoramique", action3);*/
 	glutAttachMenu(GLUT_RIGHT_BUTTON);
 
 	glutPostRedisplay();
