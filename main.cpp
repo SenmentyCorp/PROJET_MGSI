@@ -459,7 +459,7 @@ void Motion(int x, int y)
 		glutPostRedisplay();
 	}
 }
-int cam = 1000;
+int cam = 600;
 void keyboard(unsigned char key, int x, int y)
 {
 	switch (key)
@@ -536,7 +536,7 @@ void F3D_affichage()
 	glEnable(GL_DEPTH_TEST);
 	if (isCamPanoramique)
 	{
-		gluLookAt(sinf(theta) * 600, 230, cosf(theta) * 600, 0, 0, 0, 0, 1, 0);
+		gluLookAt(sinf(theta) * 600, 250, cosf(theta) * 600, 0, 0, 0, 0, 1, 0);
 	}
 	if (isHelico)
 	{
