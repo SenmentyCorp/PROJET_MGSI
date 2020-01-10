@@ -33,4 +33,5 @@
 
 TP3
 PROJET
-./vscode
+.vscode/*
+.vscode

@@ -12,10 +12,14 @@
 #include <ctime>
 #include <cstdlib>
 
+#include <glm/vec3.hpp>					// glm::vec3
+#include <glm/vec4.hpp>					// glm::vec4
+#include <glm/mat4x4.hpp>				// glm::mat4
+#include <glm/gtc/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale, glm::perspective
 #include <GL/glut.h>
 
-#define WX 1000
-#define WY 500
+#define WX 1300
+#define WY 790
 #define GAP 10
 #define PI 3.14159
 using namespace arma;
@@ -30,13 +34,16 @@ int presse = 0;
 int anglex = 0, angley = 0, xold, yold;
 int NP = 50;
 
+bool isCamPanoramique = false, isHelico = false, isFPS = false;
+
+float theta = 0.0f;
+
 enum TypeBouton
 {
 	action1 = 0,
 	action2,
-	action3,
-	action4
-} bouton_action = action1;
+	action3
+} bouton_action = action3;
 
 struct Point
 {
@@ -73,71 +80,244 @@ struct CouleurRVB
 	}
 };
 
-Point P[NMAX];
-const int nbPoints = 10000;
-const int col = sqrt(nbPoints);
+const int col = 200;
+const int nbPoints = col * col;
 Point3D P3D[nbPoints];
-CouleurRVB Couleur[nbPoints - col];
+CouleurRVB Couleur[nbPoints];
 
 static void menu(int item)
 {
 	bouton_action = static_cast<TypeBouton>(item);
 	glutPostRedisplay();
 }
+// ---
+const int NB_POINTS = 16;
+const int DISCRET = 40;
+const int N_Parcours = NB_POINTS + 3;
+Point P_Parcours[NMAX];
+Point rails[NB_POINTS * DISCRET];
+int init = 0;
 
 float map(float value, float istart, float istop, float ostart, float ostop)
 {
 	return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
 }
 
+void initPointsParcours()
+{
+	P_Parcours[0] = {171., 472.};
+	P_Parcours[1] = {260., 471.};
+	P_Parcours[2] = {316., 426.};
+	P_Parcours[3] = {297., 343.};
+	P_Parcours[4] = {254., 262.};
+	P_Parcours[5] = {263., 195.};
+	P_Parcours[6] = {304., 136.};
+	P_Parcours[7] = {297., 63.};
+	P_Parcours[8] = {188., 50.};
+	P_Parcours[9] = {142., 104.};
+	P_Parcours[10] = {67., 121.};
+	P_Parcours[11] = {62., 218.};
+	P_Parcours[12] = {129., 263.};
+	P_Parcours[13] = {143., 351.};
+	P_Parcours[14] = {104., 399.};
+	P_Parcours[15] = {110., 457.};
+}
+
+void catmullromParcours()
+{
+	mat m = mat(4, 4);
+	m << -s << 2 - s << s - 2 << s << endr
+	  << 2 * s << s - 3 << 3 - 2 * s << -s << endr
+	  << -s << 0 << s << 0 << endr
+	  << 0 << 1 << 0 << 0 << endr;
+
+	if (init == 0)
+	{
+		initPointsParcours();
+		init = 1;
+	}
+
+	int i;
+	for (i = 0; i < N_Parcours; i++)
+	{
+		colvec vectX = colvec(4);
+		vectX << P_Parcours[i % NB_POINTS].x
+			  << P_Parcours[(i + 1) % NB_POINTS].x
+			  << P_Parcours[(i + 2) % NB_POINTS].x
+			  << P_Parcours[(i + 3) % NB_POINTS].x;
+
+		colvec vectY = colvec(4);
+		vectY << P_Parcours[i % NB_POINTS].y
+			  << P_Parcours[(i + 1) % NB_POINTS].y
+			  << P_Parcours[(i + 2) % NB_POINTS].y
+			  << P_Parcours[(i + 3) % NB_POINTS].y;
+
+		mat prodMPx = m * vectX;
+		mat prodMPy = m * vectY;
+
+		glColor3f(1.0, 0.0, 0.0);
+		glBegin(GL_LINE_STRIP);
+
+		int t;
+		for (t = 0; t <= DISCRET; t++)
+		{
+			double a = (double)t / (double)DISCRET;
+			rowvec rv = rowvec(4);
+			rv << (double)(pow(a, 3.)) << (double)(pow(a, 2.)) << a << 1.;
+			mat cX = rv * prodMPx;
+			mat cY = rv * prodMPy;
+
+			glVertex2f(cX(0, 0), cY(0, 0));
+			if (t != DISCRET)
+			{
+				rails[(i % NB_POINTS) * DISCRET + (int)(a * DISCRET)] = {-((double)cX(0, 0) * 2. - 500.), (double)cY(0, 0) * 2. - 500.};
+			}
+		}
+		glEnd();
+	}
+}
+
+double param(double ri, double rj)
+{
+	double temp = 10.0 * (sinf(2.0 * (ri - rj)) * cosf(ri - rj * ri) * cosf(3.0 * (rj - ri)) * PI * ri - rj + sqrt(2.0 * abs(ri)) * abs(sinf(ri * ri)));
+	return temp;
+}
+
+double calculHauteur(int i) {
+	double range = col / 2.;
+	double x = rails[i].x/(10. / ((double) col / 100.));
+	double z = rails[i].y/(10. / ((double) col / 100.));
+
+	double ri=(x+range)/(double) col;
+	ri*=PI;
+	double rj=(z+range)/(double) col;
+	rj*=PI;
+
+	double temp=param(ri,rj);
+	return temp;
+}
+
+void parcours3D()
+{
+	glPushMatrix();
+	//glRotatef(90,0,1,0);
+	glColor3f(1.0, 0.0, 0.0);
+	glBegin(GL_LINE_STRIP);
+	double temp;
+
+	for (int i = 0; i < NB_POINTS * DISCRET; i++) {
+		temp = calculHauteur(i);
+		glVertex3d(rails[i].x, temp+0.1, rails[i].y);
+	}
+	temp = calculHauteur(0);
+	glVertex3d(rails[0].x, temp+0.1, rails[0].y);
+	glEnd();
+	glPopMatrix();
+}
+
+float norm(float x)
+{
+	return x / 255.0;
+}
+
 void initializePoints()
 {
 	int cpt = 0;
-	float mult = 30.0;
-	float mult2 = 0.05;
-	for (int i = -50; i < 50; i++)
+	float range = col / 2;
+	float max = -1000, min = 1000;
+	for (int i = -range; i < range; i++)
 	{
-		for (int j = -50; j < 50; j++)
+		for (int j = -range; j < range; j++)
 		{
 
-			float ri = (i + 50) / 100.0;
+			float ri = (i + range) / col;
 			ri *= PI;
-			float rj = (j + 50) / 100.0;
+			float rj = (j + range) / col;
 			rj *= PI;
 
-			int temp = mult * (sinf(2 * (ri)) * cosf(3 * (rj)));
-
-			P3D[cpt].x = i * 10;
+			float temp = param(ri, rj);
+			P3D[cpt].x = i * (10 / (col / 100));
 			P3D[cpt].y = temp;
-			P3D[cpt].z = j * 10;
-			cout << temp << " ";
+			P3D[cpt].z = j * (10 / (col / 100));
 			cpt++;
+			if (max < temp)
+				max = temp;
+			if (min > temp)
+				min = temp;
 		}
-		cout << endl;
 	}
 
-	for (int i = 0; i < nbPoints - col; i++)
+	//cout << max << " " << min << "=" << yrange << endl;
+	for (int i = 0; i < nbPoints; i++)
 	{
+		float c1[3] = {79, 66, 37};
+		float c2[3] = {70, 108, 29};
+		float c3[3] = {132, 165, 119};
+		float c4[4] = {255, 255, 255};
+		int palier1 = -1;
+		int palier2 = 20;
+
 		Point3D p = P3D[i];
-		Couleur[i].r = map(p.y, -mult / 2, mult / 2, 60 / 255.0, 130 / 255.0);
-		Couleur[i].v = 0.4 + map(p.x, -500, 500, 0, 0.3);
-		Couleur[i].b = 0.31 + map(p.z, -500, 500, 0, 0.2);
+		if (p.y <= palier1)
+		{
+			Couleur[i].r = map(p.y, min, palier1, norm(c1[0]), norm(c2[0]));
+			Couleur[i].v = map(p.y, min, palier1, norm(c1[1]), norm(c2[1]));
+			Couleur[i].b = map(p.y, min, palier1, norm(c1[2]), norm(c2[2]));
+		}
+		else if (p.y >= palier1 && p.y <= palier2)
+		{
+			Couleur[i].r = map(p.y, palier1, palier2, norm(c2[0]), norm(c3[0]));
+			Couleur[i].v = map(p.y, palier1, palier2, norm(c2[1]), norm(c3[1]));
+			Couleur[i].b = map(p.y, palier1, palier2, norm(c2[2]), norm(c3[2]));
+		}
+		else
+		{
+			Couleur[i].r = map(p.y, palier2, max, norm(c3[0]), norm(c4[0]));
+			Couleur[i].v = map(p.y, palier2, max, norm(c3[1]), norm(c4[1]));
+			Couleur[i].b = map(p.y, palier2, max, norm(c3[2]), norm(c4[2]));
+		}
 	}
 }
+
+
+void camPanoramique()
+{
+
+	gluLookAt(300, 300, 0, 0, 0, 0, 0, 1, 0);
+}
+
+float sigmoid(float x)
+{
+	float exp_value;
+	float return_value;
+	exp_value = exp((double)-x);
+	return_value = 1 / (1 + exp_value);
+	return return_value;
+}
+
+void tracePointsParcours()
+{
+	glColor3f(0.0, 1.0, 0.0);
+	glBegin(GL_POINTS);
+	for (int i = 0; i < NB_POINTS; i++)
+	{
+		glVertex2f(P_Parcours[i].x, P_Parcours[i].y);
+	}
+	glEnd();
+} 
 
 void TracePoints()
 {
 
 	float r, v, b;
-	glColor3f(r, v, b);
 	glBegin(GL_TRIANGLE_STRIP);
-	for (int i = 0; i < nbPoints - col - 1; i++)
+	for (int i = 0; i < nbPoints - col; i++)
 	{
 
 		r = Couleur[i].r;
 		v = Couleur[i].v;
 		b = Couleur[i].b;
-		glColor3f(r, v, b);
+		glColor4f(r, v, b, 1);
 
 		if ((i + 1) % col == 0)
 		{
@@ -152,187 +332,33 @@ void TracePoints()
 			glVertex3f(P3D[i + col + 1].x, P3D[i + col + 1].y, P3D[i + col + 1].z);
 		}
 	}
-
 	glEnd();
 }
 
-/*
-void TracePoints()
+
+void placerTrain()
 {
-	glColor3f(0.0,1.0,0.0);
-	glBegin(GL_POINTS);
-	for (int i=0;i<N;i++){
-		glVertex2f(P[i].x,P[i].y);
-	}
-	glEnd();
-	glColor3f(1.0,1.0,1.0);
-	glLineStipple(1, 0x3F07);
-	glEnable(GL_LINE_STIPPLE);
-	glBegin(GL_LINE_STRIP);
-	for (int i=0;i<N;i++){
-		glVertex2f(P[i].x,P[i].y);
-	}
-	glEnd();	
-	glDisable(GL_LINE_STIPPLE);
-}
-*/
 
-/*
-void bezier(){
-	mat matBezier = {{-1,3,-3,1}, {3, -6, 3, 0}, {-3, 3, 0, 0}, {1, 0, 0, 0}};
-	mat matParam(1,4);
+	float longSuiv = 0;
+	int x=0;
 
-	mat matPointX(4, 1);
-	mat matPointY(4, 1);
-	
-	for(int i=0;i<N;i++){
-		if(i!=0 && i%3 == 0){
-			for(int k=0;k<4;k++){
-				double coordX = P[i-k].x;
-				double coordY = P[i-k].y;
+	glPushMatrix();
+		Locomotive* loco = new Locomotive();
+		longSuiv = loco->getLongueurRouePrevRoueSuiv();
+		loco->deplacer(rails[x].x, calculHauteur(x), rails[x].y);
+		loco->assembler();
 
-				matPointX.at(k,0) = coordX;
-				matPointY.at(k,0) = coordY;
-			}
+		/*WagonBetail* wb2 = new WagonBetail;
+		wb2->deplacer(0, 0, 0);
+		wb2->assembler();
 
-			glBegin(GL_LINE_STRIP);
-			glColor3f(1.0f, 0.0f, 0.0f);
-			for(double j=0;j<1;j+=0.01){
+		WagonBetail* wb3 = new WagonBetail;
+		wb3->deplacer(-longSuiv, 0, 0);
+		wb3->assembler();*/
+	glPopMatrix();
 
-				//double scJ=
-				mat matParam = {{pow(j,3), pow(j,2), j, 1}};
-
-				mat resultMultX = matParam*matBezier*matPointX;
-				mat resultMultY = matParam*matBezier*matPointY;
-
-				glVertex2f(resultMultX(0,0), resultMultY(0,0));
-			}
-			glEnd();
-		}
-	}
-}
-*/
-
-void catmullRom()
-{
-	mat matCatmullRom = {{-s, 2 - s, s - 2, s}, {2 * s, s - 3, 3 - 2 * s, -s}, {-s, 0, s, 0}, {0, 1, 0, 0}};
-
-	mat matPointX(4, 1);
-	mat matPointY(4, 1);
-
-	for (int i = 3; i < N; i++)
-	{
-		if (N > 3 && i % 1 == 0)
-		{
-			for (int k = 0; k < 4; k++)
-			{
-				double coordX = P[i - k].x;
-				double coordY = P[i - k].y;
-
-				matPointX.at(k, 0) = coordX;
-				matPointY.at(k, 0) = coordY;
-			}
-
-			glBegin(GL_LINE_STRIP);
-			glColor3f(1.0f, 1.0f, 0.0f);
-			for (double j = 0; j < 1; j += 0.01)
-			{
-
-				mat matParam = {{pow(j, 3), pow(j, 2), j, 1}};
-
-				mat resultMultX = matParam * matCatmullRom * matPointX;
-				mat resultMultY = matParam * matCatmullRom * matPointY;
-
-				glVertex2f(resultMultX(0, 0), resultMultY(0, 0));
-			}
-			glEnd();
-		}
-	}
 }
 
-/*
-void catmullRom3D(){
-
-    mat matCatmullRom = { {-s, 2-s, s-2, s} , {2*s, s-3, 3-2*s, -s} , {-s, 0, s, 0} , {0, 1, 0, 0} };
-
-
-    mat matPointX(4, 1);
-    mat matPointY(4, 1);
-
-    for(int i=3;i<N;i++){
-        if(N>3 && i%1 == 0){
-            for(int k=0;k<4;k++){
-                double coordX = P[i-k].x;
-                double coordY = P[i-k].y;
-
-                matPointX.at(k,0) = coordX;
-                matPointY.at(k,0) = coordY;
-            }
-
-            glBegin(GL_LINE_STRIP);
-            glColor3f(1.0f, 1.0f, 0.0f);
-            for(double j=0;j<1;j+=0.01){
-
-                mat matParam = {{pow(j,3), pow(j,2), j, 1}};
-
-                mat resultMultX = matParam*matCatmullRom*matPointX;
-                mat resultMultY = matParam*matCatmullRom*matPointY;
-
-                float teta = 0;
-                float decalage = 2*M_PI/NP;
-
-                for(int k=0;k<NP;k++){
-                    float coordX, coordY, coordZ;
-                    coordX = resultMultX(0,0) * cosf(teta);
-                    coordY = resultMultY(0,0);
-                    coordZ = resultMultX(0,0) * sinf(teta);
-
-                    glVertex3f(coordX, coordY, coordZ);
-
-                    teta+=decalage;
-                }
-
-            }
-            glEnd();
-        }
-    }
-}
-*/
-
-/*
-void BSplines(){
-	mat matBSplines = { {-1, 3, -3, 1} , {3, -6, 3, 0} , {-3, 0, 3, 0} , {1, 4, 1, 0} };
-
-	mat matPointX(4, 1);
-	mat matPointY(4, 1);
-
-	for(int i=3;i<N;i++){
-		if(N>3 && i%1 == 0){
-			for(int k=0;k<4;k++){
-				double coordX = P[i-k].x;
-				double coordY = P[i-k].y;
-
-				matPointX.at(k,0) = coordX;
-				matPointY.at(k,0) = coordY;
-			}
-
-			glBegin(GL_LINE_STRIP);
-			glColor3f(1.0f, 0.0f, 1.0f);
-			for(double j=0;j<1;j+=0.01){
-
-				mat matParam = {{pow(j,3), pow(j,2), j, 1}};
-				matParam = matParam * 1.0f/6.0f;
-
-				mat resultMultX = matParam*matBSplines*matPointX;
-				mat resultMultY = matParam*matBSplines*matPointY;
-
-				glVertex2f(resultMultX(0,0), resultMultY(0,0));
-			}
-			glEnd();
-		}
-	}
-}
-*/
 
 void main_reshape(int width, int height)
 {
@@ -340,18 +366,21 @@ void main_reshape(int width, int height)
 
 	glViewport(0, 0, width, height);
 	glGetIntegerv(GL_VIEWPORT, viewport);
+	float prof = viewport[2] > viewport[3] ? viewport[2] : viewport[3];
+
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
-	glOrtho(0.0, viewport[2], 0.0, viewport[3], -50.0, 50.0);
+	glOrtho(0.0, viewport[2], 0.0, viewport[3], -prof, prof);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 }
 
 void main_display(void)
 {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glClearColor(0.5, 0.5, 0.5, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_DEPTH_TEST);
 	glutPostRedisplay();
 	glutSwapBuffers();
 }
@@ -363,32 +392,10 @@ void Mouse(int button, int state, int x, int y)
 	glutSetCursor(GLUT_CURSOR_CROSSHAIR);
 	glGetIntegerv(GL_VIEWPORT, viewport);
 
-	if (glutGetModifiers() == GLUT_ACTIVE_CTRL && button == GLUT_LEFT_BUTTON)
+	if (button == GLUT_LEFT_BUTTON)
 	{
-		droite = 0;
 		gauche = 1;
-		glColor3f(0.0, 1.0, 0.0);
-		glPointSize(3.0);
-		glInitNames();
-		glPushName(1);
-
-		P[N].x = x;
-		P[N].y = viewport[3] - y;
-
-		glLoadName(N);
-		glBegin(GL_POINTS);
-		glVertex2f(P[N].x, P[N].y);
-		glEnd();
-
-		if (state == GLUT_UP)
-			N++;
-		glutPostRedisplay();
-	}
-
-	if (glutGetModifiers() != GLUT_ACTIVE_CTRL && button == GLUT_LEFT_BUTTON)
-	{
-		gauche = 0;
-		droite = 1;
+		droite = 0;
 		if (state == GLUT_DOWN)
 		{
 			GLuint *selectBuf = new GLuint[200];
@@ -409,11 +416,11 @@ void Mouse(int button, int state, int x, int y)
 			glInitNames();
 			glPushName(1);
 
-			for (int i = 0; i < N; i++)
+			for (int i = 0; i < N_Parcours; i++)
 			{
 				glLoadName(i);
 				glBegin(GL_POINTS);
-				glVertex2f(P[i].x, P[i].y);
+				glVertex2f(P_Parcours[i].x, P_Parcours[i].y);
 				glEnd();
 			}
 
@@ -442,17 +449,17 @@ void Motion(int x, int y)
 	GLint viewport[4];
 	glGetIntegerv(GL_VIEWPORT, viewport);
 
-	if ((droite) && (mp != -1))
+	if ((gauche) && (mp != -1))
 	{
 		int i = mp;
-		P[i].x = x;
-		P[i].y = viewport[3] - y;
-		//TracePoints();
+		P_Parcours[i].x = x;
+		P_Parcours[i].y = viewport[3] - y;
+		tracePointsParcours();
 
 		glutPostRedisplay();
 	}
 }
-
+int cam = 1000;
 void keyboard(unsigned char key, int x, int y)
 {
 	switch (key)
@@ -464,6 +471,24 @@ void keyboard(unsigned char key, int x, int y)
 	case 'e': /* affichage en mode fil de fer */
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glutPostRedisplay();
+		break;
+	case 'o':
+		if (isCamPanoramique)
+		{
+			theta += 0.05f;
+		}
+		break;
+	case 'p':
+		if (isCamPanoramique)
+		{
+			theta -= 0.05f;
+		}
+		break;
+	case '+':
+		cam -= 5;
+		break;
+	case '-':
+		cam += 5;
 		break;
 	}
 }
@@ -478,53 +503,54 @@ void F3D_reshape(int x, int y)
 
 void temoin_reshape(int width, int height)
 {
-}
+	GLint viewport[4];
+	glViewport(0, 0, width, height);
+	glGetIntegerv(GL_VIEWPORT, viewport);
+	float prof = viewport[2] > viewport[3] ? viewport[2] : viewport[3];
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0.0, viewport[2], 0.0, viewport[3], -prof, prof);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+} 
+
 
 void F3D_affichage()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearColor(1.0, 1.0, 1.0, 0);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glOrtho(-500, 500, -500, 500, -1000, 1000);
-	glRotatef(-(float)angley, 1.0, 0.0, 0.0);
-	glRotatef(-(float)anglex, 0.0, 1.0, 0.0);
+	glOrtho(-cam, cam, -cam, cam, -10000, 10000);
+	glRotatef(-(float)0.0, 1.0, 0.0, 0.0);
+	glRotatef(-(float)0.0, 0.0, 1.0, 0.0);
+	glEnable(GL_DEPTH_TEST);
+	if (isCamPanoramique)
+	{
+		gluLookAt(sinf(theta) * 600, 230, cosf(theta) * 600, 0, 0, 0, 0, 1, 0);
+	}
+	if (isHelico)
+	{
+		gluLookAt(1, 550, 0, 0, 0, 0, 0, 1, 0);
+	}
+	if (isFPS)
+	{
+	}
 
 	glutPostRedisplay();
 
 	//catmullRom3D();
 	//glutSolidCube(500);
+
 	//TracePoints();
 
 	glEnable(GL_DEPTH_TEST);
 
-	Locomotive* loco = new Locomotive();
-	loco->deplacer(loco->getLongueurRouePrevRoueSuiv(), 0, 0);
-	loco->assembler();
+	placerTrain();
 
-	WagonBetail* wb2 = new WagonBetail;
-	wb2->deplacer(0, 0, 0);
-	wb2->assembler();
+	TracePoints();
+	parcours3D();
 
-	WagonBetail* wb3 = new WagonBetail;
-	wb3->deplacer(-wb3->getLongueurRouePrevRoueSuiv(), 0, 0);
-	wb3->assembler();
-
-	Arbre* a1 = new Arbre;
-	a1->modifierTaille(0.8);
-	a1->deplacer(150, 0, 250);
-	a1->assembler();
-
-	Arbre* a2 = new Arbre;
-	a2->modifierTaille(1.0);
-	a2->deplacer(-70, 0, -140);
-	a2->assembler();
-
-	Arbre* a3 = new Arbre;
-	a3->modifierTaille(0.6);
-	a3->deplacer(-140, 0, 140);
-	a3->assembler();
 
 	glutSwapBuffers();
 }
@@ -533,36 +559,30 @@ void temoin_affichage()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	/*
-    switch (bouton_action) {
-        case action1:
-            bezier();
-            break;
-        case action2:
-            catmullRom();
-            break;
-        case action3:
-            BSplines();
-            break;
-        case action4:
-            catmullRom();
-            bezier();
-            BSplines();
-            break;
-    }	
-	*/
+	switch (bouton_action)
+	{
+	case action1:
+		isCamPanoramique = false;
+		isHelico = false;
+		isFPS = true;
+		break;
+	case action2:
+		isCamPanoramique = false;
+		isHelico = true;
+		isFPS = false;
+		break;
+	case action3:
+		isCamPanoramique = true;
+		isHelico = false;
+		isFPS = false;
+		break;
+	}
 
 	glColor3f(0.0, 1.0, 0.0);
-	glPointSize(3.0);
-	glInitNames();
-	glPushName(1);
-	for (int i = 0; i < N; i++)
-	{
-		glLoadName(i);
-		glBegin(GL_POINTS);
-		glVertex2f(P[i].x, P[i].y);
-		glEnd();
-	}
+	glPointSize(5.0);
+	
+	catmullromParcours();
+	tracePointsParcours();
 
 	//TracePoints();
 	glutPostRedisplay();
@@ -601,7 +621,154 @@ void F3D_mouse(int button, int state, int x, int y)
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
 		presse = 0; /* le booleen presse passe a 0 (faux) */
 }
+void traceRail(Point3D a, Point3D b) {
 
+	double dist = sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y)+(a.z-b.z)*(a.z-b.z));
+
+	double longueur = 100;
+	double hauteur = 30;
+
+	glColor3f(0.15,0.10,0.1);
+	glEnable(GL_DEPTH_TEST);
+
+	// face cote A
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur, a.y, a.z);
+		glVertex3d(a.x+longueur, a.y+hauteur, a.z);
+		glVertex3d(a.x-longueur, a.y+hauteur, a.z);
+		glVertex3d(a.x-longueur, a.y, a.z);
+	glEnd();
+
+	// face superieure
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur, a.y+hauteur, a.z+dist);
+		glVertex3d(a.x+longueur, a.y+hauteur, a.z);
+		glVertex3d(a.x-longueur, a.y+hauteur, a.z);
+		glVertex3d(a.x-longueur, a.y+hauteur, a.z+dist);
+	glEnd();
+
+	// face cote B
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur, a.y+hauteur, a.z+dist);
+		glVertex3d(a.x+longueur, a.y, a.z+dist);
+		glVertex3d(a.x-longueur, a.y, a.z+dist);
+		glVertex3d(a.x-longueur, a.y+hauteur, a.z+dist);
+	glEnd();
+
+	// face inferieure
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur, a.y, a.z);
+		glVertex3d(a.x+longueur, a.y, a.z+dist);
+		glVertex3d(a.x-longueur, a.y, a.z+dist);
+		glVertex3d(a.x-longueur, a.y, a.z);
+	glEnd();
+
+	// face droite (x positif)
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur, a.y, a.z);
+		glVertex3d(a.x+longueur, a.y, a.z+dist);
+		glVertex3d(a.x+longueur, a.y+hauteur, a.z+dist);
+		glVertex3d(a.x+longueur, a.y+hauteur, a.z);
+	glEnd();
+
+	// face gauche (x negatif)
+	glBegin(GL_QUADS);
+		glVertex3d(a.x-longueur, a.y, a.z);
+		glVertex3d(a.x-longueur, a.y+hauteur, a.z);
+		glVertex3d(a.x-longueur, a.y+hauteur, a.z+dist);
+		glVertex3d(a.x-longueur, a.y, a.z+dist);
+	glEnd();
+
+	// ---
+	// RAIL DROIT
+
+	glColor3f(0.4,0.4,0.4);
+
+	// face A
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur, a.z);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur, a.z);
+	glEnd();
+
+	// face superieure
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur*1.5, a.z+dist);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur*1.5, a.z+dist);
+	glEnd();
+
+	// face B
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur, a.z+dist);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur*1.5, a.z+dist);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur*1.5, a.z+dist);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur, a.z+dist);
+	glEnd();
+
+	// face droite (x 2/3)
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur, a.z);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur, a.z+dist);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur*1.5, a.z+dist);
+		glVertex3d(a.x+longueur*2./3., a.y+hauteur*1.5, a.z);
+	glEnd();
+
+	// face gauche (x 1/2)
+	glBegin(GL_QUADS);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur, a.z+dist);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur, a.z);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x+longueur*0.5, a.y+hauteur*1.5, a.z+dist);
+	glEnd();
+
+
+
+
+	// RAIL GAUCHE
+
+	// face A
+	glBegin(GL_QUADS);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur, a.z);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur, a.z);
+	glEnd();
+
+	// face superieure
+	glBegin(GL_QUADS);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur*1.5, a.z+dist);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur*1.5, a.z+dist);
+	glEnd();
+
+	// face B
+	glBegin(GL_QUADS);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur, a.z+dist);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur*1.5, a.z+dist);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur*1.5, a.z+dist);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur, a.z+dist);
+	glEnd();
+
+	// face droite (x 2/3)
+	glBegin(GL_QUADS);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur, a.z);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur, a.z+dist);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur*1.5, a.z+dist);
+		glVertex3d(a.x-longueur*0.5, a.y+hauteur*1.5, a.z);
+	glEnd();
+
+	// face gauche (x 1/2)
+	glBegin(GL_QUADS);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur, a.z+dist);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur, a.z);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur*1.5, a.z);
+		glVertex3d(a.x-longueur*2./3., a.y+hauteur*1.5, a.z+dist);
+	glEnd();
+}
 int main(int argc, char **argv)
 {
 	srand(static_cast<unsigned>(time(0)));
@@ -613,13 +780,14 @@ int main(int argc, char **argv)
 	glutInit(&argc, argv);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_MULTISAMPLE);
-	window = glutCreateWindow("Courbes Cubiques");
-
+	window = glutCreateWindow("Tchouk Tchouk");
 	glutReshapeFunc(main_reshape);
 	glutDisplayFunc(main_display);
 
 	//Fenetre 3D
-	F3D = glutCreateSubWindow(window, GAP, GAP, WX / 2, WY);
+	F3D = glutCreateSubWindow(window, GAP, GAP, 780, 780);
+
+	glClearColor(0.43, 0.75, 0.7, 1);
 	glutReshapeFunc(F3D_reshape);
 	glutDisplayFunc(F3D_affichage);
 	glutMotionFunc(F3D_motion);
@@ -627,21 +795,20 @@ int main(int argc, char **argv)
 	glutKeyboardFunc(keyboard);
 
 	//Fenetre 2D
-	temoin = glutCreateSubWindow(window, GAP + WX / 2 + GAP, GAP, WX / 2, WY);
+	temoin = glutCreateSubWindow(window, 785 + GAP, GAP, 500, 500);
 	glutReshapeFunc(temoin_reshape);
 	glutDisplayFunc(temoin_affichage);
 	glutMouseFunc(Mouse);
 	glutMotionFunc(Motion);
 
 	glutCreateMenu(menu);
-	glutAddMenuEntry("Bezier", action1);
-	glutAddMenuEntry("CatmullRom", action2);
-	glutAddMenuEntry("BSplines", action3);
-	glutAddMenuEntry("TOUT", action4);
+	glutAddMenuEntry("FPS", action1);
+	glutAddMenuEntry("Helico", action2);
+	glutAddMenuEntry("Vue panoramique", action3);
 	glutAttachMenu(GLUT_RIGHT_BUTTON);
 
 	glutPostRedisplay();
 
 	glutMainLoop();
-	return (1);
+	return 0;
 }
