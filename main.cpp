@@ -175,7 +175,7 @@ void catmullromParcours()
 
 float param(float ri, float rj)
 {
-	float temp = 10.0 * (sinf(2.0 * (ri - rj)) * cosf(ri - rj * ri) * cosf(3.0 * (rj - ri)) * PI * ri - rj + sqrt(2 * ri) * abs(sinf(ri * ri)));
+	float temp = 10.0 * (sinf(2.0 * (ri - rj)) * cosf(ri - rj * ri) * cosf(3.0 * (rj - ri)) * PI * ri - rj + sqrt(2 * abs(ri)) * abs(sinf(ri * ri)));
 	return temp;
 }
 
@@ -192,17 +192,12 @@ void parcours3D()
 		double x = (rails[i].x +range)/col;
 		double z = (rails[i].y +range)/col;
 		int range = col / 2;
-		float ri = (x + range) / col;
-		ri *= PI;
-		float rj = (z + range) / col;
-		rj *= PI;
-
-		float temp = param(ri, rj);
+		float temp = param(x, z);
 		glVertex3d(rails[i].x, temp, rails[i].y);
 		//cout << temp << endl;
 	}
 	
-	glVertex3d(rails[0].x, param((rails[0].x / 10. + range) / col*PI, (rails[0].y / 10. + range) / col*PI), rails[0].y);
+	glVertex3d(rails[0].x, param((rails[0].x +range)/col, (rails[0].y +range)/col), rails[0].y);
 	glEnd();
 	glPopMatrix();
 } //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
