@@ -225,16 +225,15 @@ float norm(float x)
 void initializePoints()
 {
 	int cpt = 0;
-	float range = col / 2;
 	float max = -1000, min = 1000;
-	for (int i = -range; i < range; i++)
+	for (int i = 0; i < col; i++)
 	{
-		for (int j = -range; j < range; j++)
+		for (int j = 0; j < col; j++)
 		{
 
-			float ri = (i + range) / col;
+			float ri = i / (col*1.f);
 			ri *= PI;
-			float rj = (j + range) / col;
+			float rj = j / (col*1.f);
 			rj *= PI;
 
 			float temp = param(ri, rj);
@@ -463,7 +462,7 @@ void F3D_reshape(int x, int y)
 
 void temoin_reshape(int width, int height)
 {
-	/*GLint viewport[4];
+	GLint viewport[4];
 	glViewport(0, 0, width, height);
 	glGetIntegerv(GL_VIEWPORT, viewport);
 	float prof = viewport[2] > viewport[3] ? viewport[2] : viewport[3];
@@ -471,7 +470,7 @@ void temoin_reshape(int width, int height)
 	glLoadIdentity();
 	glOrtho(0.0, viewport[2], 0.0, viewport[3], -prof, prof);
 	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();*/
+	glLoadIdentity();
 } 
 
 
