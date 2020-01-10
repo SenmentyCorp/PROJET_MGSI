@@ -88,7 +88,7 @@ static void menu(int item)
 }
 // ---
 const int NB_POINTS = 16;
-const int DISCRET = 10;
+const int DISCRET = 40;
 const int N_Parcours = NB_POINTS + 3;
 Point P_Parcours[NMAX];
 Point rails[NB_POINTS * DISCRET];
@@ -157,7 +157,7 @@ void catmullromParcours()
 		int t;
 		for (t = 0; t <= DISCRET; t++)
 		{
-			double a = (double)t / 10.;
+			double a = (double)t / (double)DISCRET;
 			rowvec rv = rowvec(4);
 			rv << (double)(pow(a, 3.)) << (double)(pow(a, 2.)) << a << 1.;
 			mat cX = rv * prodMPx;
@@ -166,16 +166,30 @@ void catmullromParcours()
 			glVertex2f(cX(0, 0), cY(0, 0));
 			if (t != DISCRET)
 			{
-				rails[(i % NB_POINTS) * DISCRET + (int)(a * DISCRET)] = {(double)cX(0, 0) * 2. - 500., (double)cY(0, 0) * 2. - 500.};
+				rails[(i % NB_POINTS) * DISCRET + (int)(a * DISCRET)] = {-((double)cX(0, 0) * 2. - 500.), (double)cY(0, 0) * 2. - 500.};
 			}
 		}
 		glEnd();
 	}
 }
 
-float param(float ri, float rj)
+double param(double ri, double rj)
 {
-	float temp = 10.0 * (sinf(2.0 * (ri - rj)) * cosf(ri - rj * ri) * cosf(3.0 * (rj - ri)) * PI * ri - rj + sqrt(2 * abs(ri)) * abs(sinf(ri * ri)));
+	double temp = 10.0 * (sinf(2.0 * (ri - rj)) * cosf(ri - rj * ri) * cosf(3.0 * (rj - ri)) * PI * ri - rj + sqrt(2.0 * abs(ri)) * abs(sinf(ri * ri)));
+	return temp;
+}
+
+double calculHauteur(int i) {
+	double range = col / 2.;
+	double x = rails[i].x/(10. / ((double) col / 100.));
+	double z = rails[i].y/(10. / ((double) col / 100.));
+
+	double ri=(x+range)/(double) col;
+	ri*=PI;
+	double rj=(z+range)/(double) col;
+	rj*=PI;
+
+	double temp=param(ri,rj);
 	return temp;
 }
 
@@ -185,36 +199,15 @@ void parcours3D()
 	//glRotatef(90,0,1,0);
 	glColor3f(1.0, 0.0, 0.0);
 	glBegin(GL_LINE_STRIP);
-	float range = col / 2;
+	double temp;
 
-	for (int i = 0; i < NB_POINTS * DISCRET; i++)
-	{
-		double x = (rails[i].x +range)/col;
-		double z = (rails[i].y +range)/col;
-		int range = col / 2;
-		float temp = param(x, z);
-		glVertex3d(rails[i].x, temp, rails[i].y);
-		//cout << temp << endl;
+	for (int i = 0; i < NB_POINTS * DISCRET; i++) {
+		temp = calculHauteur(i);
+		glVertex3d(rails[i].x, temp+0.1, rails[i].y);
 	}
-	
-	glVertex3d(rails[0].x, param((rails[0].x +range)/col, (rails[0].y +range)/col), rails[0].y);
+	temp = calculHauteur(0);
+	glVertex3d(rails[0].x, temp+0.1, rails[0].y);
 	glEnd();
-	glPopMatrix();
-} //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-
-void camPanoramique()
-{
-
-	gluLookAt(300, 300, 0, 0, 0, 0, 0, 1, 0);
-}
-
-float sigmoid(float x)
-{
-	float exp_value;
-	float return_value;
-	exp_value = exp((double)-x);
-	return_value = 1 / (1 + exp_value);
-	return return_value;
 }
 
 float norm(float x)
@@ -279,6 +272,22 @@ void initializePoints()
 			Couleur[i].b = map(p.y, palier2, max, norm(c3[2]), norm(c4[2]));
 		}
 	}
+}
+
+
+void camPanoramique()
+{
+
+	gluLookAt(300, 300, 0, 0, 0, 0, 0, 1, 0);
+}
+
+float sigmoid(float x)
+{
+	float exp_value;
+	float return_value;
+	exp_value = exp((double)-x);
+	return_value = 1 / (1 + exp_value);
+	return return_value;
 }
 
 void tracePointsParcours()
@@ -463,7 +472,7 @@ void F3D_reshape(int x, int y)
 
 void temoin_reshape(int width, int height)
 {
-	/*GLint viewport[4];
+	GLint viewport[4];
 	glViewport(0, 0, width, height);
 	glGetIntegerv(GL_VIEWPORT, viewport);
 	float prof = viewport[2] > viewport[3] ? viewport[2] : viewport[3];
@@ -471,7 +480,7 @@ void temoin_reshape(int width, int height)
 	glLoadIdentity();
 	glOrtho(0.0, viewport[2], 0.0, viewport[3], -prof, prof);
 	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();*/
+	glLoadIdentity();
 } 
 
 
