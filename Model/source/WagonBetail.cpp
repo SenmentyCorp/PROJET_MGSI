@@ -25,7 +25,7 @@ void WagonBetail::assembler(){
 
         //ROUE 1
         glPushMatrix();
-            glColor3f(0.33f, 0.24f, 0.25f);
+            glColor3f(0.08f, 0.08f, 0.08f);
             glTranslatef(this->longueurTrain*(-0.7f/2.0f), 0, this->largeurTrain*(-0.7f/2.0f));
             glScalef(this->hauteurTrain*(1.5f/10.0f), this->hauteurTrain*(1.5f/10.0f), this->largeurTrain*(1.5f/10.0f));
             glutSolidSphere(1, 24, 24);
@@ -33,7 +33,7 @@ void WagonBetail::assembler(){
 
         //ROUE 2
         glPushMatrix();
-            glColor3f(0.33f, 0.24f, 0.25f);
+            glColor3f(0.08f, 0.08f, 0.08f);
             glTranslatef(this->longueurTrain*(-0.7f/2.0f), 0, this->largeurTrain*(0.7f/2.0f));
             glScalef(this->hauteurTrain*(1.5f/10.0f), this->hauteurTrain*(1.5f/10.0f), this->largeurTrain*(1.5f/10.0f));
             glutSolidSphere(1, 24, 24);
@@ -41,7 +41,7 @@ void WagonBetail::assembler(){
 
         //ROUE 3
         glPushMatrix();
-            glColor3f(0.33f, 0.24f, 0.25f);
+            glColor3f(0.08f, 0.08f, 0.08f);
             glTranslatef(this->longueurTrain*(0.7f/2.0f), 0, this->largeurTrain*(-0.7f/2.0f));
             glScalef(this->hauteurTrain*(1.5f/10.0f), this->hauteurTrain*(1.5f/10.0f), this->largeurTrain*(1.5f/10.0f));
             glutSolidSphere(1, 24, 24);
@@ -49,7 +49,7 @@ void WagonBetail::assembler(){
 
         //ROUE 4
         glPushMatrix();
-            glColor3f(0.33f, 0.24f, 0.25f);
+            glColor3f(0.08f, 0.08f, 0.08f);
             glTranslatef(this->longueurTrain*(0.7f/2.0f), 0, this->largeurTrain*(0.7f/2.0f));
             glScalef(this->hauteurTrain*(1.5f/10.0f), this->hauteurTrain*(1.5f/10.0f), this->largeurTrain*(1.5f/10.0f));
             glutSolidSphere(1, 24, 24);
@@ -57,7 +57,7 @@ void WagonBetail::assembler(){
 
         //PORTE 1
         glPushMatrix();
-            glColor3f(0.46f, 0.27f, 0.21f);
+            glColor3f(0.30f, 0.0f, 0.0f);
             glTranslatef(this->longueurTrain*(1.5f/10.0f), this->hauteurTrain*(5.2f/10.0f), this->largeurTrain*(4.5f/10.0f));
             glScalef(this->longueurTrain*(2.0f/10.0f), this->hauteurTrain*(7.0f/10.0f), this->largeurTrain*(2.0f/10.0f));
             glutSolidCube(1);
@@ -65,7 +65,7 @@ void WagonBetail::assembler(){
 
         //PORTE 2
         glPushMatrix();
-            glColor3f(0.46f, 0.27f, 0.21f);
+            glColor3f(0.30f, 0.0f, 0.0f);
             glTranslatef(this->longueurTrain*(-1.5f/10.0f), this->hauteurTrain*(5.2f/10.0f), this->largeurTrain*(4.5f/10.0f));
             glScalef(this->longueurTrain*(2.0f/10.0f), this->hauteurTrain*(7.0f/10.0f), this->largeurTrain*(2.0f/10.0f));
             glutSolidCube(1);
@@ -73,7 +73,7 @@ void WagonBetail::assembler(){
 
         //PORTE 3
         glPushMatrix();
-            glColor3f(0.46f, 0.27f, 0.21f);
+            glColor3f(0.30f, 0.0f, 0.0f);
             glTranslatef(this->longueurTrain*(1.5f/10.0f), this->hauteurTrain*(5.2f/10.0f), this->largeurTrain*(-4.5f/10.0f));
             glScalef(this->longueurTrain*(2.0f/10.0f), this->hauteurTrain*(7.0f/10.0f), this->largeurTrain*(2.0f/10.0f));
             glutSolidCube(1);
@@ -81,7 +81,7 @@ void WagonBetail::assembler(){
 
         //PORTE 4
         glPushMatrix();
-            glColor3f(0.46f, 0.27f, 0.21f);
+            glColor3f(0.30f, 0.0f, 0.0f);
             glTranslatef(this->longueurTrain*(-1.5f/10.0f), this->hauteurTrain*(5.2f/10.0f), this->largeurTrain*(-4.5f/10.0f));
             glScalef(this->longueurTrain*(2.0f/10.0f), this->hauteurTrain*(7.0f/10.0f), this->largeurTrain*(2.0f/10.0f));
             glutSolidCube(1);
@@ -121,7 +121,7 @@ void WagonBetail::assembler(){
 
         //CORPS
         glPushMatrix();
-            glColor3f(0.45f, 0.17f, 0.05f);
+            glColor3f(0.04f, 0.04f, 0.04f);
             glTranslatef(0, this->hauteurTrain*(5.0f/10.0f), 0);
             glScalef(this->longueurTrain, this->hauteurTrain*(9.0f/10.0f), this->largeurTrain);
             glutSolidCube(1);

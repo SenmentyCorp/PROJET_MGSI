@@ -8,6 +8,7 @@
 #include "Model/header/WagonBetail.h"
 #include "Model/header/Vecteur.h"
 #include "Model/header/Arbre.h"
+#include "Model/header/Locomotive.h"
 #include <ctime>
 #include <cstdlib>
 
@@ -349,8 +350,8 @@ void main_reshape(int width, int height)
 
 void main_display(void)
 {
-	glClearColor(0.5, 0.5, 0.5, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearColor(0.5, 0.5, 0.5, 0);
 	glutPostRedisplay();
 	glutSwapBuffers();
 }
@@ -482,6 +483,7 @@ void temoin_reshape(int width, int height)
 void F3D_affichage()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearColor(1.0, 1.0, 1.0, 0);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -497,16 +499,16 @@ void F3D_affichage()
 
 	glEnable(GL_DEPTH_TEST);
 
-	WagonBetail* wb = new WagonBetail;
-	wb->assembler();
+	Locomotive* loco = new Locomotive();
+	loco->deplacer(loco->getLongueurRouePrevRoueSuiv(), 0, 0);
+	loco->assembler();
 
 	WagonBetail* wb2 = new WagonBetail;
-	wb2->deplacer(wb2->getLongueurRouePrevRoueSuiv(), 0, 0);
+	wb2->deplacer(0, 0, 0);
 	wb2->assembler();
 
 	WagonBetail* wb3 = new WagonBetail;
 	wb3->deplacer(-wb3->getLongueurRouePrevRoueSuiv(), 0, 0);
-	wb3->orienter(0, 30, 0);
 	wb3->assembler();
 
 	Arbre* a1 = new Arbre;
@@ -515,7 +517,7 @@ void F3D_affichage()
 	a1->assembler();
 
 	Arbre* a2 = new Arbre;
-	a2->modifierTaille(1.2);
+	a2->modifierTaille(1.0);
 	a2->deplacer(-70, 0, -140);
 	a2->assembler();
 
