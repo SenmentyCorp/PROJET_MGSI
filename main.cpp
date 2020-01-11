@@ -82,6 +82,7 @@ struct CouleurRVB
 
 const int col = 200;
 const int nbPoints = col * col;
+const int MAP_DISCRET=10 / (col / 100);
 Point3D P3D[nbPoints];
 CouleurRVB Couleur[nbPoints];
 
@@ -223,22 +224,21 @@ float norm(float x)
 void initializePoints()
 {
 	int cpt = 0;
-	float range = col / 2;
 	float max = -1000, min = 1000;
-	for (int i = -range; i < range; i++)
+	for (int i = 0; i < col; i++)
 	{
-		for (int j = -range; j < range; j++)
+		for (int j = 0; j < col; j++)
 		{
 
-			float ri = (i + range) / col;
+			float ri = i / (col*1.f);
 			ri *= PI;
-			float rj = (j + range) / col;
+			float rj = j / (col*1.f);
 			rj *= PI;
 
 			float temp = param(ri, rj);
-			P3D[cpt].x = i * (10 / (col / 100));
+			P3D[cpt].x = i * MAP_DISCRET;
 			P3D[cpt].y = temp;
-			P3D[cpt].z = j * (10 / (col / 100));
+			P3D[cpt].z = j * MAP_DISCRET;
 			cpt++;
 			if (max < temp)
 				max = temp;
@@ -536,7 +536,12 @@ void F3D_affichage()
 	glEnable(GL_DEPTH_TEST);
 	if (isCamPanoramique)
 	{
+<<<<<<< HEAD
 		gluLookAt(sinf(theta) * 600, 250, cosf(theta) * 600, 0, 0, 0, 0, 1, 0);
+=======
+		int offset=col/2*MAP_DISCRET;
+		gluLookAt(offset+sinf(theta) * 600, 230, offset+cosf(theta) * 600, offset, 0, offset, 0, 1, 0);
+>>>>>>> refonteCoord
 	}
 	if (isHelico)
 	{
