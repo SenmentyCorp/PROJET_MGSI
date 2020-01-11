@@ -171,7 +171,7 @@ void catmullromParcours()
 			glVertex2f(cX(0, 0), cY(0, 0));
 			if (t != DISCRET)
 			{
-				rails[(i % NB_POINTS) * DISCRET + (int)(a * DISCRET)] = {-((double)cX(0, 0) * 2. - 500.), (double)cY(0, 0) * 2. - 500.};
+				rails[(i % NB_POINTS) * DISCRET + (int)(a * DISCRET)] = {-(((double)cX(0, 0)) * 2. -MAP_DISCRET*col), (double)cY(0, 0) * 2.};
 			}
 		}
 		glEnd();
@@ -185,13 +185,12 @@ double param(double ri, double rj)
 }
 
 double calculHauteur(int i) {
-	double range = col / 2.;
-	double x = rails[i].x/(10. / ((double) col / 100.));
-	double z = rails[i].y/(10. / ((double) col / 100.));
+	double x = rails[i].x/MAP_DISCRET;
+	double z = rails[i].y/MAP_DISCRET;
 
-	double ri=(x+range)/(double) col;
+	double ri=(x)/(double) col;
 	ri*=PI;
-	double rj=(z+range)/(double) col;
+	double rj=(z)/(double) col;
 	rj*=PI;
 
 	double temp=param(ri,rj);
@@ -536,12 +535,8 @@ void F3D_affichage()
 	glEnable(GL_DEPTH_TEST);
 	if (isCamPanoramique)
 	{
-<<<<<<< HEAD
-		gluLookAt(sinf(theta) * 600, 250, cosf(theta) * 600, 0, 0, 0, 0, 1, 0);
-=======
 		int offset=col/2*MAP_DISCRET;
 		gluLookAt(offset+sinf(theta) * 600, 230, offset+cosf(theta) * 600, offset, 0, offset, 0, 1, 0);
->>>>>>> refonteCoord
 	}
 	if (isHelico)
 	{
@@ -814,12 +809,7 @@ int main(int argc, char **argv)
 	glutDisplayFunc(temoin_affichage);
 	glutMouseFunc(Mouse);
 	glutMotionFunc(Motion);
-
-	glutCreateMenu(menu);
-	/*glutAddMenuEntry("FPS", action1);
-	glutAddMenuEntry("Helico", action2);
-	glutAddMenuEntry("Vue panoramique", action3);*/
-	glutAttachMenu(GLUT_RIGHT_BUTTON);
+	
 
 	glutPostRedisplay();
 
