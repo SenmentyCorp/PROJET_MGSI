@@ -559,17 +559,22 @@ int getWagonSuivant(float longueur, int indiceActuel)
 	
 	
 
-	return indice+5;;
+	return indice+3;;
 }
 
-float scalaire(Point p1, Point p2)
-{
-	return p1.x*p2.x+p1.y*p2.y;
-}
 
-Vecteur orienterWagon(int indicePrec, int indiceSuiv)
+
+Vecteur orienterWagon(int indicePrec, int indiceWagSuiv)
 {
 	Vecteur vTemp;
+
+	int indiceSuiv = indicePrec-(DISCRET/10);
+	float sizeRails = (sizeof(rails)/sizeof(*(rails)))-1;
+
+	if(indiceSuiv<0)
+	{
+		indiceSuiv += sizeRails;
+	}
 
 	float x1 = rails[indiceSuiv].x;
 	float x2 = rails[indicePrec].x;
@@ -578,35 +583,62 @@ Vecteur orienterWagon(int indicePrec, int indiceSuiv)
 	float y1 = calculHauteur(indiceSuiv);
 	float y2 = calculHauteur(indicePrec);
 
-	cout << " x : " << x1 << " _ " << x2 << " y " << y1 << " _ " << y2 << " z : " << z1 << " _ " << z2 << endl;; 
+	//AVANT
+	Point3D pt1;
+	pt1.x=x1;
+	pt1.y=y1;
+	pt1.z=z1;
 
-	Point vecX;
-	vecX.x=abs(x2-x1);
-	vecX.y=abs(y2-y1);
-	Point vecY;
-	vecY.x=1;
-	vecY.y=0;
+	//ARRIERE
+	Point3D pt2;
+	pt2.x=x2;
+	pt2.y=y2;
+	pt2.z=z2;
+
+	Point3D vecTrain;
+	vecTrain.x=abs(x2-x1);
+	vecTrain.y=abs(y2-y1);
+	vecTrain.z=abs(z2-z1);
+
+	Point3D vecReferent;
+	vecReferent.x=1;
+	vecReferent.y=0;
+	vecReferent.z=0;
+
+	float scal = vecTrain.x*vecReferent.x+vecTrain.z*vecReferent.z;
+	float normeTrain = sqrt(pow(vecTrain.x, 2)+pow(vecTrain.z, 2));
+	float normeReferent = sqrt(pow(vecReferent.x, 2)+pow(vecReferent.z, 2));
+	float scalNorme = normeTrain*normeReferent;
+	float tetaS = asin(scal/scalNorme)*(180/PI);
+	float tetaC = acos(scal/scalNorme)*(180/PI);
+
+	if(x2 <= x1){
+		if(z2 <= z1){
+			vTemp.y = -tetaC+180;
+		}else{
+			vTemp.y = -tetaS-90;
+		}
+	}else{
+		if(z2 <= z1){
+			vTemp.y = tetaC;
+		}else{
+			vTemp.y = tetaS-90;
+		}
+	}
 
 	/*float normeX = sqrt(pow(vecX.x, 2)+pow(vecX.y, 2));
 	float normeY = (float)sqrt(pow(vecY.x, 2)+pow(vecY.y, 2));
 	float cosTetaX = scalaire(vecX, vecY)/(normeX*normeY);
-	//vTemp.x = -acos(cosTetaX)*180/PI;
-	vTemp.x=0;*/
-
-	vecX.x=abs(x2-x1); 
-	vecX.y=abs(z2-z1);
-	float normeX = sqrt(pow(vecX.x, 2)+pow(vecX.y, 2));
-	float normeY = sqrt(pow(vecY.x, 2)+pow(vecY.y, 2));
-	float cosTetaX = scalaire(vecY, vecX)/(normeX*normeY);
-	vTemp.y = acos(cosTetaX)*180./PI;;
+	//vTemp.x = -acos(cosTetaX)*180/PI;*/
+	vTemp.x=0;	
 
 	/*vecX.x=abs(z2-z1);
 	vecX.y=abs(y2-y1);
 	normeX = sqrt(pow(vecX.x, 2)+pow(vecX.y, 2));
 	normeY = sqrt(pow(vecY.x, 2)+pow(vecY.y, 2));
 	cosTetaX = scalaire(vecX, vecY)/(normeX*normeY);
-	//vTemp.z = -acos(cosTetaX)*180/PI;;
-	vTemp.z=0;*/
+	//vTemp.z = -acos(cosTetaX)*180/PI;;*/
+	vTemp.z=0;
 
 	return vTemp;
 }
@@ -625,7 +657,6 @@ void placerTrain()
 
 		ind2 = getWagonSuivant(longSuiv, ind1);
 		vOrient = orienterWagon(ind1, ind2);
-		//cout << "Locomotif : i1 -> " << ind1 << " | i2 -> " << ind2 << " | longSuiv -> " << longSuiv << endl; 
 		ind1=ind2;
 
 		loco->orienter(vOrient.x, vOrient.y, vOrient.z);
@@ -637,12 +668,51 @@ void placerTrain()
 		ind2 = getWagonSuivant(longSuiv, ind1);
 		vOrient = orienterWagon(ind1, ind2);
 
-		//cout << "Wagonnet : i1 -> " << ind1 << " | i2 -> " << ind2 << " | longSuiv -> " << longSuiv << endl; 
-
 		ind1=ind2;
 
 		wb2->orienter(vOrient.x, vOrient.y, vOrient.z);
 		wb2->assembler();
+
+		WagonBetail* wb3 = new WagonBetail;
+		wb3->deplacer(rails[ind1].x, calculHauteur(ind1), rails[ind1].y);
+		ind2 = getWagonSuivant(longSuiv, ind1);
+		vOrient = orienterWagon(ind1, ind2);
+		ind1=ind2;
+		wb3->orienter(vOrient.x, vOrient.y, vOrient.z);
+		wb3->assembler();
+
+		WagonBetail* wb4 = new WagonBetail;
+		wb4->deplacer(rails[ind1].x, calculHauteur(ind1), rails[ind1].y);
+		ind2 = getWagonSuivant(longSuiv, ind1);
+		vOrient = orienterWagon(ind1, ind2);
+		ind1=ind2;
+		wb4->orienter(vOrient.x, vOrient.y, vOrient.z);
+		wb4->assembler();
+		
+		WagonBetail* wb5 = new WagonBetail;
+		wb5->deplacer(rails[ind1].x, calculHauteur(ind1), rails[ind1].y);
+		ind2 = getWagonSuivant(longSuiv, ind1);
+		vOrient = orienterWagon(ind1, ind2);
+		ind1=ind2;
+		wb5->orienter(vOrient.x, vOrient.y, vOrient.z);
+		wb5->assembler();
+		
+		WagonBetail* wb6 = new WagonBetail;
+		wb6->deplacer(rails[ind1].x, calculHauteur(ind1), rails[ind1].y);
+		ind2 = getWagonSuivant(longSuiv, ind1);
+		vOrient = orienterWagon(ind1, ind2);
+		ind1=ind2;
+		wb6->orienter(vOrient.x, vOrient.y, vOrient.z);
+		wb6->assembler();
+		
+		WagonBetail* wb7 = new WagonBetail;
+		wb7->deplacer(rails[ind1].x, calculHauteur(ind1), rails[ind1].y);
+		ind2 = getWagonSuivant(longSuiv, ind1);
+		vOrient = orienterWagon(ind1, ind2);
+		ind1=ind2;
+		wb7->orienter(vOrient.x, vOrient.y, vOrient.z);
+		wb7->assembler();
+
 	glPopMatrix();
 	firstRound=true;
 }
@@ -853,7 +923,7 @@ void F3D_affichage()
 
 	if (indexXTrain<sizeRails)
 	{
-		indexXTrain++;
+		indexXTrain+=4;
 	}else
 	{
 		indexXTrain=0;
