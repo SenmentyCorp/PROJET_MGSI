@@ -34,7 +34,7 @@ float s = 0.5f;
 int presse = 0;
 int anglex = 0, angley = 0, xold, yold;
 int NP = 50;
-int indexXTrain = 0;
+int indexXTrain = 3;
 bool firstRound = false;
 
 bool isCamPanoramique = false, isHelico = false, isFPS = false;
@@ -556,10 +556,12 @@ int getWagonSuivant(float longueur, int indiceActuel)
 			indice = tempIndice;
 		}
 	}
-	
-	
 
-	return indice+3;;
+	indice++;
+	if(indice >= sizeRails-1){
+	    indice = 0;
+	}
+	return indice;
 }
 
 
@@ -926,7 +928,7 @@ void F3D_affichage()
 		indexXTrain+=4;
 	}else
 	{
-		indexXTrain=0;
+		indexXTrain=1;
 	}
 	
 	glutSwapBuffers();
