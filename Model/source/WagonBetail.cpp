@@ -8,6 +8,10 @@ WagonBetail::WagonBetail(){
     this->position.x=0;
     this->position.y=0;
     this->position.z=0;
+
+    this->largeurTrain=30;
+    this->longueurTrain=93.75;
+    this->hauteurTrain=37.5;
 }
 
 void WagonBetail::assembler(){
