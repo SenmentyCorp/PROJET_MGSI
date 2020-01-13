@@ -559,7 +559,7 @@ int getWagonSuivant(float longueur, int indiceActuel)
 	
 	
 
-	return indice+3;;
+	return indice+3;
 }
 
 
@@ -641,6 +641,71 @@ Vecteur orienterWagon(int indicePrec, int indiceWagSuiv)
 	vTemp.z=0;
 
 	return vTemp;
+}
+
+
+void placerSapins()
+{
+	Arbre* arb1 = new Arbre();
+	arb1->modifierTaille(0.5);
+	arb1->deplacer(500, -20, 500);
+	arb1->assembler();
+
+	Arbre* arb2 = new Arbre();
+	arb2->modifierTaille(0.3);
+	arb2->deplacer(150, -20, 200);
+	arb2->assembler();
+
+	Arbre* arb3 = new Arbre();
+	arb3->modifierTaille(0.4);
+	arb3->deplacer(680, -20, 450);
+	arb3->assembler();
+
+	Arbre* arb4 = new Arbre();
+	arb4->modifierTaille(0.6);
+	arb4->deplacer(875, -20, 743);
+	arb4->assembler();
+
+	Arbre* arb5 = new Arbre();
+	arb5->modifierTaille(0.4);
+	arb5->deplacer(931, -20, 75);
+	arb5->assembler();
+
+	Arbre* arb6 = new Arbre();
+	arb6->modifierTaille(0.3);
+	arb6->deplacer(127, -20, 846);
+	arb6->assembler();
+
+	Arbre* arb7 = new Arbre();
+	arb7->modifierTaille(0.4);
+	arb7->deplacer(25, -20, 12);
+	arb7->assembler();
+
+	Arbre* arb8 = new Arbre();
+	arb8->modifierTaille(0.6);
+	arb8->deplacer(921, -20, 526);
+	arb8->assembler();
+
+	Arbre* arb9 = new Arbre();
+	arb9->modifierTaille(0.4);
+	arb9->deplacer(79, -20, 109);
+	arb9->assembler();
+
+	Arbre* arb10 = new Arbre();
+	arb10->modifierTaille(0.25);
+	arb10->deplacer(72, -20, 524);
+	arb10->assembler();
+
+	Arbre* arb11 = new Arbre();
+	arb11->modifierTaille(0.3);
+	arb11->deplacer(158, -20, 423);
+	arb11->assembler();
+
+	Arbre* arb12 = new Arbre();
+	arb12->modifierTaille(0.4);
+	arb12->deplacer(53, -20, 689);
+	arb12->assembler();
+
 }
 
 void placerTrain()
@@ -919,6 +984,7 @@ void F3D_affichage()
 
 	TracePoints();
 	parcours3D();
+	placerSapins();
 	placerTrain();
 
 	if (indexXTrain<sizeRails)
