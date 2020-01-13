@@ -788,7 +788,7 @@ int main(int argc, char **argv)
 	glutInitWindowPosition(0, 0);
 	glutInit(&argc, argv);
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_MULTISAMPLE);
+	glEnable(GLUT_MULTISAMPLE);
 	window = glutCreateWindow("Tchouk Tchouk");
 	glutReshapeFunc(main_reshape);
 	glutDisplayFunc(main_display);

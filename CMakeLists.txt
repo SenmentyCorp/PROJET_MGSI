@@ -9,8 +9,10 @@ find_package(GLUT REQUIRED)
 find_package(BLAS REQUIRED)
 find_package(ARMADILLO REQUIRED)
 
+file(GLOB SRC Model/source/*.cpp)
+file(GLOB HEAD Model/header/*.h)
+
 list(APPEND SRC "main.cpp")
-list(APPEND HEAD "")
 
 add_executable(${PROJECT_NAME} ${SRC} ${HEAD})
 
