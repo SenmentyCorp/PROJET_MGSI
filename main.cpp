@@ -97,7 +97,7 @@ static void menu(int item)
 }
 // ---
 const int NB_POINTS = 16;
-const int DISCRET = 120;
+const int DISCRET = 400;
 const int N_Parcours = NB_POINTS + 3;
 Point P_Parcours[NMAX];
 Point rails[NB_POINTS * DISCRET];
