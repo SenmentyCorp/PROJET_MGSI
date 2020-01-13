@@ -88,6 +88,7 @@ const int nbPoints = col * col;
 const int MAP_DISCRET=10 / (col / 100);
 Point3D P3D[nbPoints];
 CouleurRVB Couleur[nbPoints];
+double railoffset =30;
 
 static void menu(int item)
 {
@@ -121,7 +122,7 @@ void initPointsParcours()
 	P_Parcours[8] = {188., 50.};
 	P_Parcours[9] = {142., 104.};
 	P_Parcours[10] = {67., 121.};
-	P_Parcours[11] = {62., 218.};
+	P_Parcours[11] = {87., 200.};
 	P_Parcours[12] = {129., 263.};
 	P_Parcours[13] = {143., 351.};
 	P_Parcours[14] = {104., 399.};
@@ -359,9 +360,21 @@ double param(double ri, double rj)
 	double temp = 10.0 * (sinf(2.0 * (ri - rj)) * cosf(ri - rj * ri) * cosf(3.0 * (rj - ri)) * PI * ri - rj + sqrt(2.0 * abs(ri)) * abs(sinf(ri * ri)));
 	return temp;
 }
-
 double calculHauteur(int i) {
-	double x = rails[i].x/MAP_DISCRET;
+	double x = (rails[i].x)/MAP_DISCRET;
+	double z = rails[i].y/MAP_DISCRET;
+
+	double ri=(x)/(double) col;
+	ri*=PI;
+	double rj=(z)/(double) col;
+	rj*=PI;
+
+	double temp=param(ri,rj);
+	return temp;
+}
+
+double calculHauteur2(int i) {
+	double x = (rails[i].x+railoffset)/MAP_DISCRET;
 	double z = rails[i].y/MAP_DISCRET;
 
 	double ri=(x)/(double) col;
@@ -383,9 +396,9 @@ void parcours3D()
 	bool premierPoint = false;
 
 	for (int i = 0; i < NB_POINTS * DISCRET; i++) {
-		temp = calculHauteur(i);
-		glVertex3d(rails[i].x, temp+0.2, rails[i].y);
-		p2 = { rails[i].x, temp+0.2, rails[i].y };
+		temp = calculHauteur2(i);
+		glVertex3d(rails[i].x+railoffset, temp+0.2, rails[i].y);
+		p2 = { rails[i].x+railoffset, temp+0.2, rails[i].y };
 
 		if(premierPoint) { 
 			if(p.z > p2.z)
@@ -393,13 +406,13 @@ void parcours3D()
 			else traceRail(p2,p);
 		} else premierPoint = true;
 
-		p = { rails[i].x, temp+0.2, rails[i].y };
+		p = { rails[i].x+railoffset, temp+0.2, rails[i].y };
 	}
 
-	temp = calculHauteur(0);
-	glVertex3d(rails[0].x, temp+0.2, rails[0].y);
+	temp = calculHauteur2(0);
+	glVertex3d(rails[0].x+railoffset, temp+0.2, rails[0].y);
 
-	p2 = { rails[0].x, temp+0.2, rails[0].y };
+	p2 = { rails[0].x+railoffset, temp+0.2, rails[0].y };
 	if(p.z > p2.z)
 		traceRail(p2,p);
 	else traceRail(p,p2);
