@@ -9,6 +9,7 @@
 #include "Model/header/Vecteur.h"
 #include "Model/header/Arbre.h"
 #include "Model/header/Locomotive.h"
+#include "Model/header/Vecteur.h"
 #include <ctime>
 #include <cstdlib>
 
@@ -33,6 +34,8 @@ float s = 0.5f;
 int presse = 0;
 int anglex = 0, angley = 0, xold, yold;
 int NP = 50;
+int indexXTrain = 0;
+bool firstRound = false;
 
 bool isCamPanoramique = false, isHelico = false, isFPS = false;
 
@@ -92,11 +95,12 @@ static void menu(int item)
 }
 // ---
 const int NB_POINTS = 16;
-const int DISCRET = 40;
+const int DISCRET = 120;
 const int N_Parcours = NB_POINTS + 3;
 Point P_Parcours[NMAX];
 Point rails[NB_POINTS * DISCRET];
 int init = 0;
+Vecteur vOrient;   //Orientation du train
 
 float map(float value, float istart, float istop, float ostart, float ostop)
 {
@@ -335,28 +339,125 @@ void TracePoints()
 	glEnd();
 }
 
+int getWagonSuivant(float longueur, int indiceActuel)
+{
+
+	float somme = 0;
+	int indice=indiceActuel;
+	int tempIndice=indiceActuel;
+	float powX = 0;
+	float powY = 0;
+	float sizeRails = (sizeof(rails)/sizeof(*(rails)))-1;
+
+	if(firstRound)
+	{
+		while(somme < longueur)
+		{
+			if(indice<=0)
+			{
+				tempIndice = sizeRails;
+			}
+			else
+			{
+				tempIndice-=1;
+			}
+
+			powX = pow((rails[indice].x-rails[tempIndice].x), 2);
+			powY = pow((rails[indice].y-rails[tempIndice].y), 2);
+			somme += sqrt(powX+powY);
+			
+			indice = tempIndice;
+		}
+	}
+	
+	
+
+	return indice+5;;
+}
+
+float scalaire(Point p1, Point p2)
+{
+	return p1.x*p2.x+p1.y*p2.y;
+}
+
+Vecteur orienterWagon(int indicePrec, int indiceSuiv)
+{
+	Vecteur vTemp;
+
+	float x1 = rails[indiceSuiv].x;
+	float x2 = rails[indicePrec].x;
+	float z1 = rails[indiceSuiv].y;
+	float z2 = rails[indicePrec].y;
+	float y1 = calculHauteur(indiceSuiv);
+	float y2 = calculHauteur(indicePrec);
+
+	cout << " x : " << x1 << " _ " << x2 << " y " << y1 << " _ " << y2 << " z : " << z1 << " _ " << z2 << endl;; 
+
+	Point vecX;
+	vecX.x=abs(x2-x1);
+	vecX.y=abs(y2-y1);
+	Point vecY;
+	vecY.x=1;
+	vecY.y=0;
+
+	/*float normeX = sqrt(pow(vecX.x, 2)+pow(vecX.y, 2));
+	float normeY = (float)sqrt(pow(vecY.x, 2)+pow(vecY.y, 2));
+	float cosTetaX = scalaire(vecX, vecY)/(normeX*normeY);
+	//vTemp.x = -acos(cosTetaX)*180/PI;
+	vTemp.x=0;*/
+
+	vecX.x=abs(x2-x1); 
+	vecX.y=abs(z2-z1);
+	float normeX = sqrt(pow(vecX.x, 2)+pow(vecX.y, 2));
+	float normeY = sqrt(pow(vecY.x, 2)+pow(vecY.y, 2));
+	float cosTetaX = scalaire(vecY, vecX)/(normeX*normeY);
+	vTemp.y = acos(cosTetaX)*180./PI;;
+
+	/*vecX.x=abs(z2-z1);
+	vecX.y=abs(y2-y1);
+	normeX = sqrt(pow(vecX.x, 2)+pow(vecX.y, 2));
+	normeY = sqrt(pow(vecY.x, 2)+pow(vecY.y, 2));
+	cosTetaX = scalaire(vecX, vecY)/(normeX*normeY);
+	//vTemp.z = -acos(cosTetaX)*180/PI;;
+	vTemp.z=0;*/
+
+	return vTemp;
+}
 
 void placerTrain()
 {
 
 	float longSuiv = 0;
-	int x=0;
+	int ind1=indexXTrain;
+	int ind2=indexXTrain;
 
 	glPushMatrix();
 		Locomotive* loco = new Locomotive();
 		longSuiv = loco->getLongueurRouePrevRoueSuiv();
-		loco->deplacer(rails[x].x, calculHauteur(x), rails[x].y);
+		loco->deplacer(rails[ind1].x, calculHauteur(ind1), rails[ind1].y);
+
+		ind2 = getWagonSuivant(longSuiv, ind1);
+		vOrient = orienterWagon(ind1, ind2);
+		//cout << "Locomotif : i1 -> " << ind1 << " | i2 -> " << ind2 << " | longSuiv -> " << longSuiv << endl; 
+		ind1=ind2;
+
+		loco->orienter(vOrient.x, vOrient.y, vOrient.z);
 		loco->assembler();
 
-		/*WagonBetail* wb2 = new WagonBetail;
-		wb2->deplacer(0, 0, 0);
+		WagonBetail* wb2 = new WagonBetail;
+		wb2->deplacer(rails[ind1].x, calculHauteur(ind1), rails[ind1].y);
+
+		ind2 = getWagonSuivant(longSuiv, ind1);
+		vOrient = orienterWagon(ind1, ind2);
+
+		//cout << "Wagonnet : i1 -> " << ind1 << " | i2 -> " << ind2 << " | longSuiv -> " << longSuiv << endl; 
+
+		ind1=ind2;
+
+		wb2->orienter(vOrient.x, vOrient.y, vOrient.z);
 		wb2->assembler();
-
-		WagonBetail* wb3 = new WagonBetail;
-		wb3->deplacer(-longSuiv, 0, 0);
-		wb3->assembler();*/
 	glPopMatrix();
-
+	firstRound=true;
 }
 
 
@@ -526,6 +627,8 @@ void temoin_reshape(int width, int height)
 
 void F3D_affichage()
 {
+	float sizeRails = (sizeof(rails)/sizeof(*(rails)))-1;
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glMatrixMode(GL_MODELVIEW);
@@ -555,12 +658,19 @@ void F3D_affichage()
 
 	glEnable(GL_DEPTH_TEST);
 
-	placerTrain();
 
 	TracePoints();
 	parcours3D();
+	placerTrain();
 
-
+	if (indexXTrain<sizeRails)
+	{
+		indexXTrain++;
+	}else
+	{
+		indexXTrain=0;
+	}
+	
 	glutSwapBuffers();
 }
 
@@ -778,6 +888,8 @@ void traceRail(Point3D a, Point3D b) {
 		glVertex3d(a.x-longueur*2./3., a.y+hauteur*1.5, a.z+dist);
 	glEnd();
 }
+
+
 int main(int argc, char **argv)
 {
 	srand(static_cast<unsigned>(time(0)));

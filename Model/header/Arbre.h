@@ -23,9 +23,9 @@ class Arbre{
         Vecteur position;
 
     private:
-        const float hauteurArbre=60;
-        const float rayonArbre=25;
-        float ech=1;
+        float hauteurArbre;
+        float rayonArbre;
+        float ech;
 };
 
 #endif

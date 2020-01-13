@@ -8,6 +8,10 @@ Locomotive::Locomotive(){
     this->position.x=0;
     this->position.y=0;
     this->position.z=0;
+
+    this->largeurTrain=10;
+    this->longueurTrain=31.25;
+    this->hauteurTrain=12.5;
 }
 
 void Locomotive::assembler(){

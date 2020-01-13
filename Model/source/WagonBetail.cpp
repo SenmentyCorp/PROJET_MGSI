@@ -8,6 +8,10 @@ WagonBetail::WagonBetail(){
     this->position.x=0;
     this->position.y=0;
     this->position.z=0;
+
+    this->largeurTrain=10;
+    this->longueurTrain=31.25;
+    this->hauteurTrain=12.5;
 }
 
 void WagonBetail::assembler(){
@@ -22,6 +26,7 @@ void WagonBetail::assembler(){
         glRotatef(this->direction.z, 0, 0, 1);
         glRotatef(this->direction.y, 0, 1, 0);
         glRotatef(this->direction.x, 1, 0, 0);
+
 
         //ROUE 1
         glPushMatrix();

@@ -28,9 +28,9 @@ class Locomotive{
         Vecteur position;
 
     private:
-        const float largeurTrain=10;
-        const float longueurTrain=31.25;
-        const float hauteurTrain=12.5;
+        float largeurTrain;
+        float longueurTrain;
+        float hauteurTrain;
         Vecteur positionRoueAvant;
         Vecteur positionRoueArriere;
 };

@@ -8,6 +8,10 @@ Arbre::Arbre(){
     this->position.x=0;
     this->position.y=0;
     this->position.z=0;
+
+    this->hauteurArbre=60;
+    this->rayonArbre=25;
+    this->ech=1;
 }
 
 void Arbre::assembler(){
