@@ -920,6 +920,9 @@ void F3D_affichage()
 	}
 	if (isFPS)
 	{
+        gluLookAt(rails[indexXTrain].x, rails[indexXTrain+1].y, calculHauteur(indexXTrain),
+                rails[indexXTrain+1].x, calculHauteur(indexXTrain), rails[indexXTrain+1].y,
+                0, 1, 0);
 	}
 
 	glutPostRedisplay();
